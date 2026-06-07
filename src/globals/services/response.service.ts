@@ -17,7 +17,7 @@ type ResOptions = {
 
 @Injectable()
 export class ResponseService {
-  constructor(private readonly i18n: I18nService) {}
+  constructor(private readonly i18n: I18nService) { }
 
   async custom(
     response: Response,
@@ -256,19 +256,15 @@ export class ResponseService {
     if (!files) return;
 
     if (Array.isArray(files)) {
-      // case: upload.array()
       await deleteFiles(files);
     } else if (req.file) {
-      // case: upload.single()
       await deleteFile(req.file);
     } else if (typeof files === 'object') {
-      // case: upload.fields() — object with field names
       const allFiles = Object.values(files).flat();
       await deleteFiles(allFiles);
     }
   }
   private translateMessage(lang: string | string[], messageKey: string) {
-    console.log(messageKey);
 
     if (lang && Array.isArray(lang)) {
       const { extractedProperty, extractedKey } = this.getMessageArgs(
@@ -287,15 +283,11 @@ export class ResponseService {
       });
     }
     if (lang && typeof lang === 'string') {
-      console.log(messageKey);
-      console.log(messageKey[0]);
 
       const { extractedProperty, extractedKey } = this.getMessageArgs(
         Array.isArray(messageKey) ? messageKey[0] : messageKey,
       );
-      console.log(extractedProperty);
 
-      console.log(extractedKey);
 
 
       if (extractedKey)
@@ -335,7 +327,7 @@ export class ResponseService {
     isLocalized: string | string[],
   ) {
     if (!isLocalized) return data;
-    
+
     const Localized = Array.isArray(isLocalized)
       ? toBoolean(isLocalized[0])
       : toBoolean(isLocalized);

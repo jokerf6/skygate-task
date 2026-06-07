@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { RolesKeys } from 'src/_modules/authorization/providers/roles';
 import { getClientIp } from 'src/globals/helpers/getIp.helper';
 import { PrismaService } from 'src/globals/services/prisma.service';
-import { RolesKeys } from 'src/_modules/authorization/providers/roles';
 
 export type Payload = {
   exp: number;
@@ -21,7 +21,6 @@ export class VisitorStrategy extends PassportStrategy(Strategy, 'VISITOR') {
     });
   }
   async validate(request: Request, payload: Payload) {
-    console.log('fff->', payload);
     if (!payload) {
       const serializedUser = {
         id: null,
