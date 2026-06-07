@@ -5,7 +5,6 @@ import {
   HttpException,
   Injectable,
 } from '@nestjs/common';
-import axios from 'axios';
 import { Response } from 'express';
 import { I18nService } from 'nestjs-i18n';
 import { ResponseService } from 'src/globals/services/response.service';
@@ -18,57 +17,93 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     private readonly responseService: ResponseService, // Inject ResponseService
   ) {}
 
-  async catch(exception: HttpException, host: ArgumentsHost) {
+  private extractExceptionDetails(exceptionResponse: unknown) {
+    if (!exceptionResponse || typeof exceptionResponse !== 'object') {
+      return undefined;
+    }
+
+    const response = exceptionResponse as Record<string, any>;
+    const { message, statusCode, error, ...details } = response;
+
+    if (Object.keys(details).length > 0) {
+      return details;
+    }
+
+    return error ?? undefined;
+  }
+
+  async catch(exception: unknown, host: ArgumentsHost) {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
 
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
-      const message = exception.getResponse() as any;
-      const messageKey = message['message'] || message;
+      const exceptionResponse = exception.getResponse() as any;
+      const messageKey =
+        exceptionResponse?.message || exceptionResponse || 'internal_server_error';
+      const details = this.extractExceptionDetails(exceptionResponse);
 
       switch (status) {
         case 500:
-          this.responseService.internalServerError(response, messageKey);
+          await this.responseService.internalServerError(response, messageKey, {
+            details,
+          });
           break;
         case 400: {
-          this.responseService.badRequest(response, messageKey);
+          await this.responseService.badRequest(response, messageKey, {
+            details,
+          });
           break;
         }
         case 401:
-          this.responseService.unauthorized(response, messageKey);
+          await this.responseService.unauthorized(response, messageKey, {
+            details,
+          });
           break;
         case 403:
-          this.responseService.forbidden(
+          await this.responseService.forbidden(
             response,
             messageKey,
-            exception['response']['data'],
+            details,
           );
           break;
         case 404:
-          this.responseService.notFound(response, messageKey);
+          await this.responseService.notFound(response, messageKey, {
+            details,
+          });
           break;
         case 409:
-          this.responseService.conflict(response, messageKey);
+          await this.responseService.conflict(response, messageKey, details, {
+            details,
+          });
           break;
         case 429:
-          this.responseService.tooManyRequest(response, messageKey);
+          await this.responseService.tooManyRequest(response, messageKey, {
+            details,
+          });
           break;
         case 412:
           {
-            this.responseService.custom(
+            await this.responseService.custom(
               response,
               messageKey,
-              exception['options']['data'],
-              { code: status },
+              details,
+              { code: status, details },
             );
           }
           break;
         case 413:
-          this.responseService.badRequest(response, messageKey);
+          await this.responseService.custom(
+            response,
+            messageKey,
+            details,
+            { code: status, details },
+          );
           break;
         case 422:
-          this.responseService.unProcessableData(response, messageKey);
+          await this.responseService.unProcessableData(response, messageKey, {
+            details,
+          });
           break;
         default:
           // eslint-disable-next-line no-console
@@ -87,9 +122,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         // eslint-disable-next-line no-console
         console.error('Failed to send error message to Telegram:', error);
       }
-      this.responseService.internalServerError(
+      await this.responseService.internalServerError(
         response,
         'Internal server error',
+        {
+          details: exception instanceof Error ? exception.message : exception,
+        },
       );
     }
   }

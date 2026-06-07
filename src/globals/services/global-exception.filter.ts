@@ -12,6 +12,10 @@ import { I18nService } from 'nestjs-i18n';
 export class GlobalExceptionFilter implements ExceptionFilter {
   constructor(private readonly i18n: I18nService) {}
 
+  private getErrorCode(status: number): string {
+    return HttpStatus[status] || `HTTP_${status}`;
+  }
+
   async catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -23,6 +27,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // Get exception response
     const exceptionResponse = exception.getResponse();
     let message = 'internal_server_error'; // Default translation key
+    let details: any;
 
     if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
@@ -31,16 +36,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       (exceptionResponse as any).message
     ) {
       message = (exceptionResponse as any).message;
+      const { message: _message, statusCode, error, ...rest } =
+        exceptionResponse as Record<string, any>;
+      details = Object.keys(rest).length ? rest : error;
     }
 
     // If message is an array (e.g., validation errors), translate each one
     let translatedMessage;
     if (Array.isArray(message)) {
-      translatedMessage = await Promise.all(
-        message.map(
-          async (msg) => await this.i18n.translate(`${msg}`, { lang }),
-        ),
-      );
+      translatedMessage = (
+        await Promise.all(
+          message.map(
+            async (msg) => await this.i18n.translate(`${msg}`, { lang }),
+          ),
+        )
+      ).join(', ');
     } else {
       translatedMessage = await this.i18n.translate(`${message}`, {
         lang,
@@ -53,9 +63,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
     response.status(status).json({
-      statusCode: status,
+      success: false,
       message: translatedMessage,
-      error: exception.name || 'Error',
+      error: {
+        code: this.getErrorCode(status),
+        details,
+      },
     });
   }
 }

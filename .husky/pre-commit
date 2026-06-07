@@ -1,6 +1,6 @@
 . "$(dirname -- "$0")/_/husky.sh"
 git pull
-
+npm run build
 node translate.ts
 CHANGES=$(git diff --name-only)
 if [ -n "$CHANGES" ]; then

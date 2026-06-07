@@ -19,19 +19,18 @@ import { RateLimitMiddleware } from 'src/globals/middlewares/rate-limit.middlewa
 import { XssMiddleware } from 'src/globals/middlewares/xss.middleware';
 // import { NotificationModule } from './_modules/notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { WinstonModule } from 'nest-winston';
 import { ClsModule } from 'nestjs-cls';
 import { FilterModule } from 'src/_modules/filter/filter.modules';
+import { buildWinstonOptions } from 'src/configs/winston.config';
 import { NotificationMiddleware } from 'src/globals/middlewares/notification.middleware';
 import { NotificationService } from 'src/globals/services/notification.service';
 import { AuditModule } from './_modules/audit/audit.module';
 import { RedisModule } from './_modules/redis/redis.module';
-import { SearchModule } from './_modules/search/search.module';
 import { UploadModule } from './_modules/upload/upload.module';
 import { WorkerModule } from './_modules/worker/worker.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { WinstonModule } from 'nest-winston';
-import { buildWinstonOptions } from 'src/configs/winston.config';
 
 const I18N_DIR = path.join(process.cwd(), './i18n');
 
@@ -76,7 +75,6 @@ const I18N_DIR = path.join(process.cwd(), './i18n');
     }),
 
     GlobalModule,
-    SearchModule,
     // NotificationModule,
     UploadModule,
     MediaModule,

@@ -13,11 +13,59 @@ type ResOptions = {
   total?: number;
   code?: number;
   dashboardOptions?: any;
+  errorCode?: string;
+  details?: any;
 };
 
 @Injectable()
 export class ResponseService {
   constructor(private readonly i18n: I18nService) { }
+
+  private buildErrorResponse(
+    message: string,
+    errorCode: string,
+    details?: any,
+  ) {
+    return {
+      success: false,
+      message,
+      error: {
+        code: errorCode,
+        details,
+      },
+    };
+  }
+
+  private getErrorCode(status: number): string {
+    return HttpStatus[status] || `HTTP_${status}`;
+  }
+
+  private async sendError(
+    response: Response,
+    status: number,
+    messageKey,
+    details?: any,
+    options: ResOptions = {},
+  ) {
+    await this.reqDeleteFiles(response);
+
+    const message = await this.translateMessage(
+      response.req.headers['locale'],
+      messageKey,
+    );
+
+    const { code: _httpCode, errorCode, details: optionDetails, ...restOptions } = options;
+    const payloadDetails =
+      details ?? optionDetails ?? (Object.keys(restOptions).length ? restOptions : undefined);
+
+    return response.status(status).json(
+      this.buildErrorResponse(
+        message,
+        errorCode || this.getErrorCode(status),
+        payloadDetails,
+      ),
+    );
+  }
 
   async custom(
     response: Response,
@@ -26,8 +74,8 @@ export class ResponseService {
     options: ResOptions = {},
   ) {
     const { code, ...restOptions } = options;
-    if (code && code !== 200 && code !== 201) {
-      await this.reqDeleteFiles(response);
+    if (code && code >= 400) {
+      return this.sendError(response, code, messageKey, dataKey, options);
     }
 
     const data = this.localizeBody(
@@ -36,7 +84,7 @@ export class ResponseService {
       response.req.headers['islocalized'],
     );
 
-    const message = this.translateMessage(
+    const message = await this.translateMessage(
       response.req.headers['locale'],
       messageKey,
     );
@@ -48,14 +96,14 @@ export class ResponseService {
     });
   }
 
-  success<Type>(
+  async success<Type>(
     response: Response,
     messageKey: string,
     dataKey?: Type | Type[] | null,
     options: ResOptions = {},
   ) {
     this.reqBasedEdits(response);
-    const message = this.translateMessage(
+    const message = await this.translateMessage(
       response.req.headers['locale'],
       messageKey,
     );
@@ -73,7 +121,7 @@ export class ResponseService {
     });
   }
 
-  created(
+  async created(
     response: Response,
     messageKey: string,
     dataKey?: object,
@@ -86,7 +134,7 @@ export class ResponseService {
       response.req.headers['locale'],
       response.req.headers['islocalized'],
     );
-    const message = this.translateMessage(
+    const message = await this.translateMessage(
       response.req.headers['locale'],
       messageKey,
     );
@@ -104,22 +152,13 @@ export class ResponseService {
     dataKey?: object,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-    const message = this.translateMessage(
-      response.req.headers['locale'],
+    return this.sendError(
+      response,
+      HttpStatus.FORBIDDEN,
       messageKey,
-    );
-
-    const data = this.localizeBody(
       dataKey,
-      response.req.headers['locale'],
-      response.req.headers['islocalized'],
+      options,
     );
-    return response.status(HttpStatus.FORBIDDEN).json({
-      message,
-      data,
-      ...options,
-    });
   }
 
   async conflict(
@@ -128,21 +167,13 @@ export class ResponseService {
     dataKey?: object,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-    const data = this.localizeBody(
-      dataKey,
-      response.req.headers['locale'],
-      response.req.headers['islocalized'],
-    );
-    const message = this.translateMessage(
-      response.req.headers['locale'],
+    return this.sendError(
+      response,
+      HttpStatus.CONFLICT,
       messageKey,
+      dataKey,
+      options,
     );
-    return response.status(HttpStatus.CONFLICT).json({
-      message,
-      data,
-      ...options,
-    });
   }
 
   async notFound(
@@ -150,15 +181,7 @@ export class ResponseService {
     messageKey: string,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-    const message = this.translateMessage(
-      response.req.headers['locale'],
-      messageKey,
-    );
-    return response.status(HttpStatus.NOT_FOUND).json({
-      message,
-      ...options,
-    });
+    return this.sendError(response, HttpStatus.NOT_FOUND, messageKey, undefined, options);
   }
 
   async tooManyRequest(
@@ -166,15 +189,13 @@ export class ResponseService {
     messageKey: string,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-    const message = this.translateMessage(
-      response.req.headers['locale'],
+    return this.sendError(
+      response,
+      HttpStatus.TOO_MANY_REQUESTS,
       messageKey,
+      undefined,
+      options,
     );
-    return response.status(HttpStatus.TOO_MANY_REQUESTS).json({
-      message,
-      ...options,
-    });
   }
 
   async internalServerError(
@@ -182,15 +203,13 @@ export class ResponseService {
     messageKey: string,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-    const message = this.translateMessage(
-      response.req.headers['locale'],
+    return this.sendError(
+      response,
+      HttpStatus.INTERNAL_SERVER_ERROR,
       messageKey,
+      undefined,
+      options,
     );
-    return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      message,
-      ...options,
-    });
   }
 
   async unauthorized(
@@ -198,16 +217,13 @@ export class ResponseService {
     messageKey: string,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-    const message = this.translateMessage(
-      response.req.headers['locale'],
+    return this.sendError(
+      response,
+      HttpStatus.UNAUTHORIZED,
       messageKey,
+      undefined,
+      options,
     );
-
-    return response.status(HttpStatus.UNAUTHORIZED).json({
-      message,
-      ...options,
-    });
   }
 
   async badRequest(
@@ -215,17 +231,13 @@ export class ResponseService {
     messageKey: string,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-
-    const message = this.translateMessage(
-      response.req.headers['locale'],
+    return this.sendError(
+      response,
+      HttpStatus.BAD_REQUEST,
       messageKey,
+      undefined,
+      options,
     );
-
-    return response.status(HttpStatus.BAD_REQUEST).json({
-      message,
-      ...options,
-    });
   }
 
   async unProcessableData(
@@ -233,16 +245,13 @@ export class ResponseService {
     messageKey: string,
     options: ResOptions = {},
   ) {
-    await this.reqDeleteFiles(response);
-    const message = this.translateMessage(
-      response.req.headers['locale'],
+    return this.sendError(
+      response,
+      HttpStatus.UNPROCESSABLE_ENTITY,
       messageKey,
+      undefined,
+      options,
     );
-
-    return response.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
-      message,
-      ...options,
-    });
   }
   private reqBasedEdits(response: Response) {
     const files = response.req.file || response.req.files;
@@ -264,11 +273,17 @@ export class ResponseService {
       await deleteFiles(allFiles);
     }
   }
-  private translateMessage(lang: string | string[], messageKey: string) {
+  private async translateMessage(lang: string | string[], messageKey: string) {
+    if (Array.isArray(messageKey)) {
+      const translatedMessages = await Promise.all(
+        messageKey.map((key) => this.translateMessage(lang, key)),
+      );
+      return translatedMessages.join(', ');
+    }
 
     if (lang && Array.isArray(lang)) {
       const { extractedProperty, extractedKey } = this.getMessageArgs(
-        messageKey[0],
+        messageKey,
       );
 
       if (extractedKey)
@@ -283,12 +298,9 @@ export class ResponseService {
       });
     }
     if (lang && typeof lang === 'string') {
-
       const { extractedProperty, extractedKey } = this.getMessageArgs(
-        Array.isArray(messageKey) ? messageKey[0] : messageKey,
+        messageKey,
       );
-
-
 
       if (extractedKey)
         return this.i18n.translate(`response.${extractedKey}`, {
@@ -303,7 +315,6 @@ export class ResponseService {
     }
   }
   private getMessageArgs(messageKey: string) {
-
     const regexProperty = /\*(.*?)\*/;
     const regexKey = /0(.*?)0/;
 
