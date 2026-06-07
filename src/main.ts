@@ -9,7 +9,6 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { config } from 'dotenv';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { I18nService } from 'nestjs-i18n';
 import { AppModule } from './app/app.module';
 import { corsConfig } from './configs/cors.config';
 import { createMorganMiddleware } from './configs/morgan.config';
@@ -35,8 +34,6 @@ async function bootstrap() {
   app.use(createMorganMiddleware(logger));
 
   app.use(cookieParser(env('COOKIE_SECRET'), {}));
-  const i18nService =
-    app.get<I18nService<Record<string, unknown>>>(I18nService);
   const responseService = app.get(ResponseService);
 
   const prefix = env('API_PREFIX') || '';
@@ -49,7 +46,7 @@ async function bootstrap() {
 
   app.useLogger(logger);
   app.flushLogs();
-  app.useGlobalFilters(new GlobalExceptionFilter(i18nService, responseService));
+  app.useGlobalFilters(new GlobalExceptionFilter(responseService, logger));
   app.useGlobalPipes(new ValidationPipe(globalValidationPipeOptions));
   app.use(swStats.getMiddleware());
   app.set('trust proxy', true);

@@ -2,19 +2,21 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
+  Inject,
   HttpException,
   Injectable,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { I18nService } from 'nestjs-i18n';
+import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston';
 import { ResponseService } from 'src/globals/services/response.service';
 
 @Catch()
 @Injectable()
 export class GlobalExceptionFilter implements ExceptionFilter {
   constructor(
-    private readonly i18n: I18nService, // Inject i18n service
-    private readonly responseService: ResponseService, // Inject ResponseService
+    private readonly responseService: ResponseService,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: WinstonLogger,
   ) {}
 
   private extractExceptionDetails(exceptionResponse: unknown) {
@@ -106,22 +108,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           });
           break;
         default:
-          // eslint-disable-next-line no-console
-          console.log(exception);
+          this.logger.error(
+            `Unhandled HTTP exception: ${status}`,
+            exception instanceof Error ? exception.stack : undefined,
+            'GlobalExceptionFilter',
+          );
           break;
       }
     } else {
-      if (env('PROCESS') && env('PROCESS') === 'production') {
-      } else {
-        // eslint-disable-next-line no-console
-        console.log(exception);
-      }
-      try {
-        
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to send error message to Telegram:', error);
-      }
+      this.logger.error(
+        'Unhandled non-HTTP exception',
+        exception instanceof Error ? exception.stack : undefined,
+        'GlobalExceptionFilter',
+      );
       await this.responseService.internalServerError(
         response,
         'Internal server error',
