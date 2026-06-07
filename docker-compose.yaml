@@ -1,0 +1,13 @@
+services:
+  app:
+    container_name: task
+    build: .
+    restart: always
+    ports:
+      - '3062:3030'
+    volumes:
+      - node_modules:/usr/src/app/node_modules
+      - ../uploads/task:/usr/src/app/uploads
+
+volumes:
+  node_modules:

@@ -1,0 +1,47 @@
+model Role {
+  id      Int     @id @default(autoincrement())
+  name    Json?   @db.Json
+  roleKey String  @unique @map("key")
+  default Boolean @default(false)
+  storeId Int?   @map("store_id")
+  // default columns
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // relations
+  Users                      User[]
+  RolePermission             RolePermission[]
+  SystemSenderNotification   SystemNotification[] @relation("SystemSenderNotification")
+  SystemReceiverNotification SystemNotification[] @relation("SystemReceiverNotification")
+  Notification               Notification[]       @relation("NotificationGroup")
+
+  @@map("roles")
+}
+
+model Permission {
+  id        Int       @id @default(autoincrement())
+  name      Json?     @db.Json
+  method    String
+  prefix    String
+  default   Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  RolePermission RolePermission[]
+
+  @@unique([prefix, method])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
+
+  // relations
+  Role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}

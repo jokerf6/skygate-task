@@ -1,0 +1,14 @@
+model Language {
+  // Normal Fields
+  name      String
+  key       String    @id @unique
+  file      String
+  frontFile String    @map("front_file")
+  // default Fields
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  sessions Session[]
+
+  @@map("languages")
+}

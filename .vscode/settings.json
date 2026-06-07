@@ -1,0 +1,72 @@
+{
+  "editor.fontFamily": "'JetBrains Mono', monospace",
+  "editor.fontSize": 15,
+  "editor.fontLigatures": true,
+
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+
+  "editor.stickyScroll.enabled": true,
+
+  "editor.minimap.enabled": false,
+
+  "editor.rulers": [100],
+
+  "editor.inlineSuggest.enabled": true,
+
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  "files.autoSave": "onFocusChange",
+
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "explorer.confirmDelete": false,
+
+  "git.autofetch": true,
+  "git.confirmSync": false,
+
+  "terminal.integrated.scrollback": 20000,
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.next": true
+  },
+
+  "files.exclude": {
+    "**/.git": true,
+    "**/dist": true,
+    "**/coverage": true
+  },
+
+  "workbench.editor.enablePreview": false,
+
+  "breadcrumbs.enabled": true,
+
+  "workbench.iconTheme": "material-icon-theme",
+
+  "cSpell.words": [
+    "servicerating",
+    "storerating",
+    "nestjs",
+    "dto",
+    "typeorm",
+    "prisma",
+    "redis",
+    "bullmq",
+    "microservice",
+    "webhook"
+  ]
+}

@@ -1,0 +1,22 @@
+model Transaction {
+    id         String          @id @default(uuid())
+    customerId Int             @map("customer_Id")
+    credit     Float         @default(0)
+    debit      Float         @default(0)
+    balance    Float         @default(0)
+    type       TransactionType
+
+    deletedAt DateTime? @map("deleted_at")
+    createdAt  DateTime        @default(now()) @map("created_at")
+
+    Customer  User  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+    @@map("transactions")
+}
+
+enum TransactionType {
+  ORDER_REFUND
+  PAYMENT
+  FUND
+  LOYALTY_POINT
+}
