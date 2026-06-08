@@ -1,7 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-
 import { PrismaService } from '../../../globals/services/prisma.service';
-
 import { OTPType, SessionType } from '@prisma/client';
 import { RolesKeys } from 'src/_modules/authorization/providers/roles';
 import { firstOrMany } from 'src/globals/helpers/first-or-many';
@@ -29,42 +27,41 @@ import { HelperService } from './helper.service';
 @Injectable()
 export class UserService {
   constructor(
-    private prisma: PrismaService,
-    private Token: TokenService,
-    private OTP: OTPService,
-    private helper: HelperService,
+    private readonly prisma: PrismaService,
+    private readonly tokenService: TokenService,
+    private readonly otpService: OTPService,
+    private readonly helper: HelperService,
   ) {}
 
-  async getUser(userId: Id, jti: string) {
+  async getUser(userId: Id, jti?: string): Promise<FlattenedUser> {
     const selectObj = selectUserWithRoleAndPermissionsOBJ(jti);
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: selectObj,
     });
-    const flattenUser = transformFlattenUser(user);
-
-    return flattenUser;
+    if (!user) throw new NotFoundException('user_not_found');
+    return transformFlattenUser(user);
   }
 
   async getAll(filters: FilterUserDTO) {
     const args = getUserArgs(filters);
-    const users = await this.prisma.user[firstOrMany(filters.id)](args);
-    return users;
+    return this.prisma.user[firstOrMany(filters.id)](args);
   }
-  async getFcmToken(jti: string) {
+
+  async getFcmToken(jti: string): Promise<string | undefined> {
     const session = await this.prisma.session.findUnique({
       where: { jti },
       select: { fcmToken: true },
     });
-
     return session?.fcmToken;
   }
-  async count(filters: FilterUserDTO) {
+
+  async count(filters: FilterUserDTO): Promise<number> {
     const args = getUserArgs(filters);
     return this.prisma.user.count({ where: args.where });
   }
 
-  async delete(id: Id) {
+  async delete(id: Id): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException('user_not_found');
@@ -79,14 +76,14 @@ export class UserService {
   }
 
   async verify(userId: Id, data: VerifyResetOtpDTO) {
-    await this.OTP.verifyOTP(userId, data.otp, OTPType.EMAIL_VERIFICATION);
+    await this.otpService.verifyOTP(userId, data.otp, OTPType.EMAIL_VERIFICATION);
     await this.prisma.user.update({
       where: { id: userId },
       data: { verified: true },
     });
     const user = await this.getProfile(userId);
-    const { token } = await this.Token.generateToken(
-      user?.user?.id,
+    const { token } = await this.tokenService.generateToken(
+      user?.id,
       undefined,
       undefined,
       SessionType.ACCESS,
@@ -94,98 +91,89 @@ export class UserService {
     return { user, token };
   }
 
-  async create(data: CreateUserDTO) {
-    await this.helper.userExistOrThrow({
-      email: data.email,
-    });
-
+  async create(data: CreateUserDTO): Promise<void> {
+    await this.helper.userExistOrThrow({ email: data.email });
     const hashedPassword = hashPassword(data.password);
-    data.password = hashedPassword;
-    data.roleKey = RolesKeys.CUSTOMER;
     await this.prisma.user.create({
-      data,
+      data: {
+        ...data,
+        password: hashedPassword,
+        roleKey: RolesKeys.CUSTOMER,
+      },
       select: { email: true, id: true, name: true },
     });
   }
 
-  async updateCurrentUser(dto: UpdateUserDTO, userId: Id, jti: string) {
+  async updateCurrentUser(dto: UpdateUserDTO, userId: Id, jti: string): Promise<void> {
     const { fcm, locale, ...data } = dto;
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
-    if (fcm) {
-      await this.prisma.session.update({
-        where: {
-          jti,
-        },
-        data: {
-          fcmToken: fcm,
-        },
-      });
-    }
-    if (locale) {
-      await this.prisma.session.updateMany({
-        where: {
-          OR: [
-            {
-              jti,
-            },
-            {
-              refreshParentJti: jti,
-            },
-          ],
-        },
-        data: {
-          languageId: locale,
-        },
-      });
-    }
     if (!user) {
       throw new NotFoundException('user_not_found');
     }
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...data,
-      },
-    });
+    if (fcm) {
+      await this.prisma.session.update({
+        where: { jti },
+        data: { fcmToken: fcm },
+      });
+    }
+
+    if (locale) {
+      await this.prisma.session.updateMany({
+        where: {
+          OR: [
+            { jti },
+            { refreshParentJti: jti },
+          ],
+        },
+        data: { languageId: locale },
+      });
+    }
+
+    if (Object.keys(data).length > 0) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data,
+      });
+    }
   }
 
-  async updatePassword(id: Id, data: UpdateUserPasswordDTO) {
+  async updatePassword(id: Id, data: UpdateUserPasswordDTO): Promise<void> {
     const { password, newPassword } = data;
     const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('user_not_found');
     validateUserPassword(password, user.password);
     const hashedPassword = hashPassword(newPassword);
     await this.prisma.user.update({
       where: { id },
-      data: {
-        password: hashedPassword,
-      },
+      data: { password: hashedPassword },
     });
     await this.prisma.session.deleteMany({
       where: { userId: id },
     });
   }
 
-  async getProfile(id, jti?: string) {
-    const user = await this.getUser(id, jti);
-    return user;
+  async getProfile(id: Id, jti?: string): Promise<FlattenedUser> {
+    return this.getUser(id, jti);
   }
 
   async getPermissions(id: Id, jti?: string) {
-    const user: FlattenedUser = await this.getUser(id, jti);
+    const user = await this.getUser(id, jti);
     return user.Permissions;
   }
 
-  async update(id: Id, data: UpdateUserDTO) {
+  async update(id: Id, data: UpdateUserDTO): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('user_not_found');
     await this.prisma.user.update({
       where: { id },
       data,
     });
   }
 
-  async updateLocale(jti: string, locale: string) {
+  async updateLocale(jti: string, locale: string): Promise<void> {
     await this.prisma.session.update({
       where: { jti },
       data: { languageId: locale },

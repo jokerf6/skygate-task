@@ -29,7 +29,7 @@ export class BaseAuthenticationService {
     ip: string,
     dto: EmailPasswordLoginDTO,
   ): Promise<{
-    user: User;
+    user: any;
     AccessToken: string;
     RefreshToken: string;
   }> {

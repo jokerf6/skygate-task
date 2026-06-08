@@ -8,18 +8,17 @@ import { OTPType, SessionType, User } from '@prisma/client';
 import { TokenService } from 'src/_modules/authentication/services/jwt.service';
 import { OTPService } from 'src/_modules/authentication/services/otp.service';
 import { validateUserPassword } from 'src/globals/helpers/password.helpers';
-
 import { PrismaService } from 'src/globals/services/prisma.service';
 
 @Injectable()
 export class HelperService {
   constructor(
-    private prisma: PrismaService,
-    private Token: TokenService,
-    private OTPService: OTPService,
+    private readonly prisma: PrismaService,
+    private readonly tokenService: TokenService,
+    private readonly otpService: OTPService,
   ) {}
 
-  async getUserById(id: Id) {
+  async getUserById(id: Id): Promise<Omit<User, 'password'>> {
     const user = await this.prisma.user.findUnique({
       where: { id, deletedAt: null },
     });
@@ -29,27 +28,20 @@ export class HelperService {
   }
 
   async userExist({
-    message,
+    message = 'user_not_found',
     id,
     email,
     password,
-    roleKey,
     checkVerified = true,
   }: {
     message?: string;
     id?: Id;
     email?: string;
     password?: string;
-    roleKey?: string;
     checkVerified?: boolean;
-    ValidatePassword?: boolean;
-  }): Promise<User> {
-    message = message ?? 'user_not_found';
+  }): Promise<Omit<User, 'password'>> {
     const isFound = await this.prisma.user.findUnique({
-      where: {
-        id,
-        email,
-      },
+      where: id ? { id } : { email },
     });
 
     if (!isFound) throw new UnprocessableEntityException(message);
@@ -62,24 +54,21 @@ export class HelperService {
     return isFound;
   }
 
-  async userExistOrThrow({ id, email }: { id?: Id; email?: string }) {
+  async userExistOrThrow({ id, email }: { id?: Id; email?: string }): Promise<void> {
     const isFound = await this.prisma.user.findUnique({
-      where: {
-        id,
-        email,
-      },
+      where: id ? { id } : { email },
     });
 
     if (isFound) throw new ConflictException('user_already_exist');
   }
 
-  async userCanLogin(user: User, checkVerified = true, ip?: string) {
+  async userCanLogin(user: User, checkVerified = true, ip?: string): Promise<void> {
     if (!user) {
       throw new UnprocessableEntityException('invalid credentials');
     }
     if (!user.verified && checkVerified) {
-      await this.OTPService.generateOTP(user.id, OTPType.EMAIL_VERIFICATION);
-      const { token } = await this.Token.generateToken(
+      await this.otpService.generateOTP(user.id, OTPType.EMAIL_VERIFICATION);
+      const { token } = await this.tokenService.generateToken(
         user.id,
         ip,
         undefined,
@@ -88,17 +77,15 @@ export class HelperService {
       );
 
       throw new PreconditionFailedException('NOT_VERIFIED', {
-        ...({
-          data: {
-            user: {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-            },
-            token,
+        data: {
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
           },
-        } as any),
-      });
+          token,
+        },
+      } as any);
     }
     if (!user.active) {
       throw new UnprocessableEntityException('DISABLED_ACCOUNT');
