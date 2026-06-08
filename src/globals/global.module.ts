@@ -4,6 +4,7 @@ import { Global, Module } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { join } from 'path';
 import { LanguagesService } from 'src/_modules/languages/languages.service';
+import { LanguagesCacheService } from 'src/_modules/languages/services/languages-cache.service';
 import { MediaService } from 'src/_modules/media/services/media.service';
 import { RedisModule } from 'src/app/_modules/redis/redis.module';
 import { RateLimitMiddleware } from './middlewares/rate-limit.middleware';
@@ -50,6 +51,7 @@ import { SMSService } from './services/sms.service';
     EmailService,
     ModelHelperService,
     LanguagesService,
+    LanguagesCacheService,
     MediaService,
     RateLimitMiddleware,
   ],
@@ -61,6 +63,7 @@ import { SMSService } from './services/sms.service';
     EmailService,
     ModelHelperService,
     LanguagesService,
+    LanguagesCacheService,
     MediaService,
     RateLimitMiddleware,
   ],

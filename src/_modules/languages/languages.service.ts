@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as path from 'path';
-import { RedisService } from 'src/app/_modules/redis/redis.service';
 import { firstOrMany } from 'src/globals/helpers/first-or-many';
 import { copyAndRenameFolder } from 'src/globals/helpers/folder.helper';
 import { PrismaService } from 'src/globals/services/prisma.service';
 import { MediaService } from '../media/services/media.service';
+import { LanguagesCacheService } from './services/languages-cache.service';
 import {
   CreateLanguagesDTO,
   FilterLanguagesDTO,
@@ -20,35 +20,48 @@ export class LanguagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
-    private readonly redis: RedisService,
+    private readonly cache: LanguagesCacheService,
   ) {}
 
   async create(data: CreateLanguagesDTO) {
     await this.prisma.language.create({
       data,
     });
+    await this.cache.invalidate();
   }
 
   async update(body: UpdateLanguagesDTO) {
     await this.prisma.language.update({ where: { key: body.key }, data: body });
+    await this.cache.invalidate();
   }
 
   async findAll(filters: FilterLanguagesDTO) {
-    const args = getLanguagesArgs(filters);
-    const argsWithSelect = getLanguagesArgsWithSelect();
+    return this.cache.remember(
+      'findAll',
+      filters ?? {},
+      async () => {
+        const args = getLanguagesArgs(filters);
+        const argsWithSelect = getLanguagesArgsWithSelect();
 
-    const data = await this.prisma.language[firstOrMany(filters?.key)]({
-      ...argsWithSelect,
-      ...args,
-    });
-    return data;
+        return this.prisma.language[firstOrMany(filters?.key)]({
+          ...argsWithSelect,
+          ...args,
+        });
+      },
+    );
   }
 
   async count(filters: FilterLanguagesDTO) {
-    const args = getLanguagesArgs(filters);
-    return await this.prisma.language.count({
-      where: args.where,
-    });
+    return this.cache.remember(
+      'count',
+      filters ?? {},
+      async () => {
+        const args = getLanguagesArgs(filters);
+        return this.prisma.language.count({
+          where: args.where,
+        });
+      },
+    );
   }
   async delete(key: string): Promise<void> {
     if (key === 'en')
@@ -58,6 +71,7 @@ export class LanguagesService {
         key,
       },
     });
+    await this.cache.invalidate();
   }
 
   async handelFile(body: CreateLanguagesDTO | UpdateLanguagesDTO) {
@@ -80,12 +94,6 @@ export class LanguagesService {
     );
   }
   async getCashedLanguages() {
-    const cashed = await this.redis.get('languages');
-    if (!cashed) {
-      const data = await this.findAll({});
-      await this.redis.set('languages', JSON.stringify(data), 300);
-      return data;
-    }
-    return JSON.parse(cashed);
+    return this.findAll({});
   }
 }
