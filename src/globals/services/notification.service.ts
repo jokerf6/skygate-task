@@ -80,40 +80,62 @@ export class NotificationService {
     }
   }
 
+  async sendSystemNotification(
+    languageId: string,
+    data: SystemNotification,
+    userId: Id,
+  ) {
+    try {
+      if (!data.notificationAllowed) {
+        return;
+      }
+
+      const session = await this.prisma.session.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (!session?.fcmToken) {
+        return;
+      }
+
+      const title = localizedObject(data.title, languageId) as string;
+      const body = localizedObject(data.body, languageId) as string;
+
+      await this.sendPushNotification(session.fcmToken, title, body);
+    } catch (error) {
+      this.logger.error(`Error sending notification: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   async sendNotification(
     locale,
     data: SystemNotification,
     jti?: string,
     userId?: Id,
   ) {
-    try {
-      const { receiverId, group } = data;
-      const title = localizedObject(data.title, locale.languageId) as string;
-      const body = localizedObject(data.body, locale.languageId) as string;
-      if (group) {
-        await this.sendToTopic(receiverId, title, body);
-        await this.prisma.notification.create({
-          data: {
-            title: data.title,
-            body: data.body,
-            groupId: receiverId,
-          },
-        });
-      } else {
-        const token = (await this.prisma.session.findUnique({ where: { jti } }))
-          .fcmToken;
-        await this.sendPushNotification(token, title, body);
-
-        await this.prisma.notification.create({
-          data: {
-            title: data.title,
-            body: data.body,
-            userId,
-          },
-        });
-      }
-    } catch (error) {
-      this.logger.error(`Error sending notification: ${error.message}`);
+    if (!data.notificationAllowed) {
+      return;
     }
+
+    const resolvedLanguageId =
+      typeof locale === 'string' ? locale : locale?.languageId;
+
+    if (userId) {
+      return this.sendSystemNotification(resolvedLanguageId, data, userId);
+    }
+
+    if (!jti) {
+      return;
+    }
+
+    const session = await this.prisma.session.findUnique({ where: { jti } });
+    if (!session) return;
+
+    return this.sendSystemNotification(
+      resolvedLanguageId,
+      data,
+      session.userId,
+    );
   }
 }

@@ -10,8 +10,10 @@ export class SmsProcessor {
 
   @Process(JobName.SEND_SMS)
   async handleSendSms(job: Job) {
-    const { user, titleKey, languageId } = job.data;
-    const title = localizedObject(titleKey, languageId) as string;
-    await this.sms.sendSMS(user.phone, title);
+    const { user, notification, languageId } = job.data;
+    const message =
+      (localizedObject(notification.body, languageId) as string) ||
+      (localizedObject(notification.title, languageId) as string);
+    await this.sms.sendSMS(user.phone, message);
   }
 }

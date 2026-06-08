@@ -68,5 +68,8 @@
     "bullmq",
     "microservice",
     "webhook"
-  ]
+  ],
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
 }

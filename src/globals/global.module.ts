@@ -8,6 +8,7 @@ import { LanguagesCacheService } from 'src/_modules/languages/services/languages
 import { MediaService } from 'src/_modules/media/services/media.service';
 import { RedisModule } from 'src/app/_modules/redis/redis.module';
 import { RateLimitMiddleware } from './middlewares/rate-limit.middleware';
+import { SystemNotificationDispatcherService } from './services/system-notification-dispatcher.service';
 import { EmailService } from './services/email.service';
 import { MapService } from './services/map.service';
 import { ModelHelperService } from './services/modelHelper.service';
@@ -53,6 +54,7 @@ import { SMSService } from './services/sms.service';
     LanguagesService,
     LanguagesCacheService,
     MediaService,
+    SystemNotificationDispatcherService,
     RateLimitMiddleware,
   ],
   exports: [
@@ -65,6 +67,7 @@ import { SMSService } from './services/sms.service';
     LanguagesService,
     LanguagesCacheService,
     MediaService,
+    SystemNotificationDispatcherService,
     RateLimitMiddleware,
   ],
 })

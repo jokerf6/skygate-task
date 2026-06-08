@@ -1,9 +1,9 @@
 model Role {
-  id      Int     @id @default(autoincrement())
-  name    Json?   @db.Json
-  roleKey String  @unique @map("key")
-  default Boolean @default(false)
-  storeId Int?   @map("store_id")
+  id        Int       @id @default(autoincrement())
+  name      Json?     @db.Json
+  roleKey   String    @unique @map("key")
+  default   Boolean   @default(false)
+  storeId   Int?      @map("store_id")
   // default columns
   createdAt DateTime  @default(now()) @map("created_at")
   deletedAt DateTime? @map("deleted_at")
@@ -11,9 +11,7 @@ model Role {
   // relations
   Users                      User[]
   RolePermission             RolePermission[]
-  SystemSenderNotification   SystemNotification[] @relation("SystemSenderNotification")
   SystemReceiverNotification SystemNotification[] @relation("SystemReceiverNotification")
-  Notification               Notification[]       @relation("NotificationGroup")
 
   @@map("roles")
 }

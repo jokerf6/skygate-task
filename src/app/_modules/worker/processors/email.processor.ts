@@ -10,8 +10,10 @@ export class EmailProcessor {
 
   @Process(JobName.SEND_EMAIL)
   async handleSendEmail(job: Job) {
-    const { user, titleKey, languageId } = job.data;
-    const title = localizedObject(titleKey, languageId) as string;
-    await this.email.sendEmail(user.email, title);
+    const { user, notification, languageId } = job.data;
+    const message =
+      (localizedObject(notification.body, languageId) as string) ||
+      (localizedObject(notification.title, languageId) as string);
+    await this.email.sendEmail(user.email, message);
   }
 }

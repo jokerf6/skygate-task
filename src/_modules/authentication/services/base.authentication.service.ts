@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OTPType, SessionType, User } from '@prisma/client';
-import { RolesKeys } from 'src/_modules/authorization/providers/roles';
 import { HelperService } from 'src/_modules/user/services/helper.service';
 import { UserService } from 'src/_modules/user/services/user.service';
 import { hashPassword } from 'src/globals/helpers/password.helpers';
@@ -12,9 +11,8 @@ import { ResetPasswordDTO } from '../dto/reset-password.dto';
 import { VerifyOtpDTO } from '../dto/verify-otp.dto';
 import { TokenService } from './jwt.service';
 import { OTPService } from './otp.service';
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
-import { JobName, QueueName } from 'src/app/_modules/worker/worker.constants';
+import { EVENTS } from '@prisma/client';
+import { SystemNotificationDispatcherService } from 'src/globals/services/system-notification-dispatcher.service';
 
 @Injectable()
 export class BaseAuthenticationService {
@@ -25,7 +23,7 @@ export class BaseAuthenticationService {
     private readonly userService: UserService,
     private readonly otpService: OTPService,
     private readonly auditService: AuditService,
-    @InjectQueue(QueueName.NOTIFICATION) private readonly notificationQueue: Queue,
+    private readonly dispatcher: SystemNotificationDispatcherService,
   ) {}
 
   async login(
@@ -270,27 +268,14 @@ export class BaseAuthenticationService {
 
     if (!user) return;
 
-    const notifications = await this.prisma.systemNotification.findMany({
-      where: {
-        event: 'auth/new_device_login',
-        receiverId: user.roleKey,
-      },
-    });
-
-    if (notifications.length === 0) return;
-
     let languageId = localeKey;
     if (!languageId) {
       const defaultLang = await this.prisma.language.findFirst();
       languageId = defaultLang?.key || 'en';
     }
 
-    for (const notification of notifications) {
-      await this.notificationQueue.add(JobName.PROCESS_NOTIFICATION, {
-        notification,
-        languageId,
-        targetUsers: [user],
-      });
-    }
+    await this.dispatcher.dispatch(EVENTS.LOGIN, user.roleKey, languageId, [
+      user,
+    ]);
   }
 }
