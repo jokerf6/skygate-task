@@ -28,6 +28,7 @@ export function ValidateEnum(
       if (matchCase) return value;
       return value.toUpperCase();
     }),
+
     IsEnum(enumType),
   );
 }

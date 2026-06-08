@@ -1,15 +1,14 @@
-import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
-  S3Client,
-  PutObjectCommand,
   HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { v4 as uuidv4 } from 'uuid';
-import { lookup } from 'mime-types';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as fs from 'fs';
+import { lookup } from 'mime-types';
 import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 import { PRESIGNED_URL_EXPIRY_SECONDS } from './upload.constants';
 
@@ -27,13 +26,12 @@ export class UploadService implements OnModuleInit {
   private readonly uploadsPath: string;
   private readonly mainUrl: string;
 
-  constructor(private readonly configService: ConfigService) {
-    this.isAwsEnabled =
-      this.configService.get<string>('AWS_MEDIA') === 'true' ||
-      (this.configService.get<boolean>('AWS_MEDIA') as unknown) === true;
-
-    this.uploadsPath = this.configService.get<string>('UPLOADS_PATH') ?? './uploads';
-    this.mainUrl = this.configService.get<string>('MAIN_URL') ?? 'http://localhost:3030';
+  constructor() {
+    this.isAwsEnabled = env('AWS_MEDIA') === 'true' ? true : false;
+    this.uploadsPath = env('UPLOADS_PATH') ?? './uploads';
+    this.mainUrl = env('MAIN_URL')
+      ? `${env('MAIN_URL')}${env('API_PREFIX')}/v1`
+      : `http://localhost:${env('PORT')}${env('API_PREFIX')}/v1`;
   }
 
   onModuleInit(): void {
@@ -43,8 +41,6 @@ export class UploadService implements OnModuleInit {
       this.ensureLocalUploadsDir();
     }
   }
-
-  // ─── Public API ──────────────────────────────────────────────────────────────
 
   async getPresignedUrl(
     filename: string,
@@ -64,13 +60,11 @@ export class UploadService implements OnModuleInit {
       : this.verifyLocalUpload(key);
   }
 
-  // ─── AWS S3 ──────────────────────────────────────────────────────────────────
-
   private initS3Client(): void {
-    const region = this.configService.getOrThrow<string>('AWS_REGION');
-    const accessKeyId = this.configService.getOrThrow<string>('AWS_ACCESS_KEY_ID');
-    const secretAccessKey = this.configService.getOrThrow<string>('AWS_SECRET_ACCESS_KEY');
-    this.bucketName = this.configService.getOrThrow<string>('AWS_S3_BUCKET_NAME');
+    const region = env('AWS_REGION');
+    const accessKeyId = env('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = env('AWS_SECRET_ACCESS_KEY');
+    this.bucketName = env('AWS_S3_BUCKET_NAME');
 
     this.s3Client = new S3Client({
       region,
@@ -123,7 +117,7 @@ export class UploadService implements OnModuleInit {
   }
 
   private getLocalUploadUrl(key: string): { url: string; key: string } {
-    const url = `${this.mainUrl}/api/upload/local-upload/${key}`;
+    const url = `${this.mainUrl}/upload/local-upload/${key}`;
     return { url, key };
   }
 

@@ -4,10 +4,10 @@ import {
   Controller,
   Param,
   Post,
-  Put,
-  Req,
   Res,
+  UseInterceptors
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
@@ -22,6 +22,7 @@ import {
   BLOCKED_EXTENSIONS,
   getMaxBytes,
 } from './upload.constants';
+import { CreateUploadDTO, LocalUploadDTO } from './upload.dto';
 import { safeJoin, sanitizeSegment } from './upload.helpers';
 import { UploadService } from './upload.service';
 
@@ -38,20 +39,19 @@ export class UploadController {
     private readonly response: ResponseService,
     private readonly configService: ConfigService,
   ) {
-    this.uploadsPath = this.configService.get<string>('UPLOADS_PATH') ?? './uploads';
+    this.uploadsPath =
+      this.configService.get<string>('UPLOADS_PATH') ?? './uploads';
   }
 
   @Post('/presigned-url')
-  async getPresignedUrl(
-    @Body() body: { filename: string; filetype: string; folder?: string },
-    @Res() res: Response,
-  ) {
+  async getPresignedUrl(@Body() body: CreateUploadDTO, @Res() res: Response) {
     const { filename, filetype, folder } = body;
-    if (!filename || !filetype) {
-      throw new BadRequestException('Filename and filetype are required');
-    }
     const data = await this.service.getPresignedUrl(filename, filetype, folder);
-    return this.response.success(res, 'Presigned URL generated successfully', data);
+    return this.response.success(
+      res,
+      'Presigned URL generated successfully',
+      data,
+    );
   }
 
   @Post('/verify')
@@ -63,14 +63,18 @@ export class UploadController {
     if (!result.success) {
       throw new BadRequestException(`Verification failed: ${result.error}`);
     }
-    return this.response.success(res, 'Upload verified successfully', result.metadata);
+    return this.response.success(
+      res,
+      'Upload verified successfully',
+      result.metadata,
+    );
   }
 
-
-  @Put('/local-upload/:key(*)')
+  @Post('/local-upload/:key(*)')
+  @UseInterceptors(FileInterceptor('file'))
   async localUpload(
     @Param('key') key: string,
-    @Req() req: Request,
+    @Body() body: LocalUploadDTO,
     @Res() res: Response,
   ) {
     key = sanitizeSegment(key, 'key');
@@ -79,22 +83,11 @@ export class UploadController {
     const maxBytes = getMaxBytes(ext);
 
     this.validateExtension(ext);
-    this.validateContentLength(req, maxBytes);
 
     const filePath = safeJoin(this.uploadsPath, key);
     this.ensureDirectoryExists(path.dirname(filePath));
-
-    const writeStream = this.createWriteStream(filePath);
-
-    this.enforceSizeLimit(req, writeStream, filePath, maxBytes);
-
-    req.pipe(writeStream);
-
-    return this.waitForUpload(req, writeStream, filePath).then(() =>
-      this.response.success(res, 'File uploaded successfully', { key }),
-    );
+    return this.response.success(res, 'File uploaded successfully', { key });
   }
-
 
   private validateExtension(ext: string): void {
     if (BLOCKED_EXTENSIONS.has(ext)) {
@@ -127,7 +120,9 @@ export class UploadController {
     try {
       return fs.createWriteStream(filePath, { flags: 'wx' });
     } catch (err) {
-      throw new BadRequestException(`Could not initiate upload: ${err.message}`);
+      throw new BadRequestException(
+        `Could not initiate upload: ${err.message}`,
+      );
     }
   }
 

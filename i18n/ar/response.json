@@ -1,4 +1,5 @@
 {
+  "Unauthorized": "غير مصرح",
   "Access token refreshed successfully": "تم تحديث رمز الوصول بنجاح",
   "User Logged In Successfully": "تم تسجيل دخول المستخدم بنجاح",
   "otp sent to email successfully": "تم إرسال رمز التحقق إلى البريد الإلكتروني بنجاح",
@@ -86,5 +87,6 @@
   "Resource not found": "المورد غير موجود",
   "You do not have access to this resource": "ليس لديك حق الوصول إلى هذا المورد",
   "invalid request with 200": "طلب غير صالح مع رد 200",
-  "Failed to send push notification": "فشل إرسال الإشعار الفوري"
+  "Failed to send push notification": "فشل إرسال الإشعار الفوري",
+  "File uploaded successfully": "File uploaded successfully"
 }
