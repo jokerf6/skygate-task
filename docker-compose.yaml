@@ -1,13 +1,60 @@
 services:
   app:
-    container_name: task
-    build: .
+    container_name: skygate-app
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: always
     ports:
       - '3062:3030'
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=mysql://root:rootpassword@db:3306/task
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=3030
     volumes:
-      - node_modules:/usr/src/app/node_modules
-      - ../uploads/task:/usr/src/app/uploads
+      - ./uploads:/usr/src/app/uploads
+      - ./logs:/usr/src/app/logs
+
+  db:
+    image: mysql:8.0
+    container_name: skygate-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: task
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  redis:
+    image: redis:7-alpine
+    container_name: skygate-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
-  node_modules:
+  mysql_data:
+  redis_data:
