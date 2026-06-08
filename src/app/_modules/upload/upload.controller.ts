@@ -4,29 +4,35 @@ import {
   Controller,
   Param,
   Post,
+  Req,
   Res,
-  UseInterceptors
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import * as fs from 'fs';
+import { lookup as lookupMimeType } from 'mime-types';
 import * as path from 'path';
 
 import { ConfigService } from '@nestjs/config';
 import { Auth } from 'src/_modules/authentication/decorators/auth.decorator';
+import { UploadFile } from 'src/decorators/api/upload-file.decorator';
 import { tag } from 'src/globals/helpers/tag.helper';
 import { ResponseService } from 'src/globals/services/response.service';
-import {
-  ALLOWED_EXTENSIONS,
-  BLOCKED_EXTENSIONS,
-  getMaxBytes,
-} from './upload.constants';
+import { ALLOWED_EXTENSIONS, BLOCKED_EXTENSIONS } from './upload.constants';
 import { CreateUploadDTO, LocalUploadDTO } from './upload.dto';
-import { safeJoin, sanitizeSegment } from './upload.helpers';
+import { sanitizeSegment } from './upload.helpers';
 import { UploadService } from './upload.service';
 
 const PREFIX = 'upload';
+const LOCAL_UPLOAD_FOLDER = 'uploads';
+const LOCAL_UPLOAD_MAX_SIZE = 10 * 1024 * 1024;
+const LOCAL_UPLOAD_ALLOWED_MIME_TYPES = Array.from(
+  new Set(
+    [...ALLOWED_EXTENSIONS]
+      .map((extension) => lookupMimeType(extension))
+      .filter((mimeType): mimeType is string => Boolean(mimeType)),
+  ),
+);
 
 @Controller(PREFIX)
 @ApiTags(tag(PREFIX))
@@ -71,22 +77,69 @@ export class UploadController {
   }
 
   @Post('/local-upload/:key(*)')
-  @UseInterceptors(FileInterceptor('file'))
+  @UploadFile('file', LOCAL_UPLOAD_FOLDER, undefined, {
+    maxSize: LOCAL_UPLOAD_MAX_SIZE,
+    allowedExtensions: [...ALLOWED_EXTENSIONS],
+    blockedExtensions: [...BLOCKED_EXTENSIONS],
+    allowedMimeTypes: LOCAL_UPLOAD_ALLOWED_MIME_TYPES,
+  })
   async localUpload(
     @Param('key') key: string,
     @Body() body: LocalUploadDTO,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
-    key = sanitizeSegment(key, 'key');
+    const normalizedKey = this.validateUploadKey(key);
+    const storageKey = this.normalizeLocalKey(normalizedKey);
+    const file = req.file;
 
-    const ext = path.extname(key).toLowerCase();
-    const maxBytes = getMaxBytes(ext);
+    if (!file?.path) {
+      throw new BadRequestException('No file uploaded');
+    }
 
-    this.validateExtension(ext);
-
-    const filePath = safeJoin(this.uploadsPath, key);
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    const finalKey = this.resolveStoredKey(storageKey, fileExtension);
+    const filePath = this.getDestinationPath(finalKey);
     this.ensureDirectoryExists(path.dirname(filePath));
-    return this.response.success(res, 'File uploaded successfully', { key });
+
+    if (fs.existsSync(filePath)) {
+      throw new BadRequestException('File already exists');
+    }
+
+    fs.renameSync(file.path, filePath);
+
+    return this.response.success(res, 'File uploaded successfully', {
+      key: this.getPublicKey(finalKey),
+      mediaUrl: `/media?media=${this.getPublicKey(finalKey)}`,
+      file: finalKey,
+    });
+  }
+
+  private validateUploadKey(key: string): string {
+    const normalizedKey = sanitizeSegment(key, 'key');
+    const ext = path.extname(normalizedKey).toLowerCase();
+    if (ext) {
+      this.validateExtension(ext);
+    }
+    return normalizedKey;
+  }
+
+  private normalizeLocalKey(key: string): string {
+    return key.startsWith('uploads/')
+      ? key.slice('uploads/'.length)
+      : key;
+  }
+
+  private resolveStoredKey(key: string, fileExtension: string): string {
+    if (path.extname(key)) {
+      return key;
+    }
+
+    if (!fileExtension) {
+      return key;
+    }
+
+    return `${key}${fileExtension}`;
   }
 
   private validateExtension(ext: string): void {
@@ -98,78 +151,17 @@ export class UploadController {
     }
   }
 
-  private validateContentLength(req: Request, maxBytes: number): void {
-    const contentLength = req.headers['content-length'];
-    if (!contentLength) return;
-
-    const size = Number(contentLength);
-    if (Number.isFinite(size) && size > maxBytes) {
-      throw new BadRequestException(
-        `File too large. Max ${maxBytes / (1024 * 1024)}MB allowed`,
-      );
-    }
-  }
-
   private ensureDirectoryExists(dir: string): void {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
   }
 
-  private createWriteStream(filePath: string): fs.WriteStream {
-    try {
-      return fs.createWriteStream(filePath, { flags: 'wx' });
-    } catch (err) {
-      throw new BadRequestException(
-        `Could not initiate upload: ${err.message}`,
-      );
-    }
+  private getDestinationPath(key: string): string {
+    return path.join(this.uploadsPath, LOCAL_UPLOAD_FOLDER, key);
   }
 
-  private enforceSizeLimit(
-    req: Request,
-    writeStream: fs.WriteStream,
-    filePath: string,
-    maxBytes: number,
-  ): void {
-    let bytesReceived = 0;
-
-    req.on('data', (chunk: Buffer) => {
-      bytesReceived += chunk.length;
-
-      if (bytesReceived > maxBytes) {
-        req.destroy(new Error('File too large'));
-        writeStream.destroy(new Error('File too large'));
-        this.cleanupFile(filePath);
-      }
-    });
-  }
-
-  private waitForUpload(
-    req: Request,
-    writeStream: fs.WriteStream,
-    filePath: string,
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
-      writeStream.on('finish', resolve);
-
-      writeStream.on('error', (err) => {
-        this.cleanupFile(filePath);
-        reject(new BadRequestException(`Upload failed: ${err.message}`));
-      });
-
-      req.on('error', (err) => {
-        this.cleanupFile(filePath);
-        reject(new BadRequestException(`Upload failed: ${err.message}`));
-      });
-    });
-  }
-
-  private cleanupFile(filePath: string): void {
-    try {
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    } catch {
-      // Silently ignore cleanup errors
-    }
+  private getPublicKey(key: string): string {
+    return `${LOCAL_UPLOAD_FOLDER}/${key}`;
   }
 }

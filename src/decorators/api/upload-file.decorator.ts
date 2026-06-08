@@ -22,20 +22,35 @@ import { v4 } from 'uuid';
 export const uploadOptions = (
   filePath: string,
   type?: UploadTypes,
-  fileType?: string,
-  maxFileSize?: number, // Add max file size parameter (in bytes)
-  disallowedTypes?: string[], // Add disallowed types parameter
+  options?: UploadOptions,
 ) => {
   let fileKey = '';
+  const allowedMimeTypes = uniqueValues([
+    ...(options?.allowedTypes ?? []),
+    ...(options?.allowedMimeTypes ?? []),
+  ]);
+  const allowedExtensions = normalizeExtensions(options?.allowedExtensions);
+  const blockedMimeTypes = uniqueValues([
+    ...(options?.disallowedTypes ?? []),
+    ...(options?.blockedMimeTypes ?? []),
+  ]);
+  const blockedExtensions = normalizeExtensions(options?.blockedExtensions);
+  const allowedMimePrefixes = uniqueValues([
+    ...(options?.allowedMimePrefixes ?? []),
+    ...(options?.fileTypePrefix ? [options.fileTypePrefix] : []),
+  ]);
 
   const uploadOptions = {
     fileFilter: (
       _req: any,
-      file: { fieldname: string; mimetype: string },
+      file: { fieldname: string; mimetype: string; originalname: string },
       callback: (error: Error | null, acceptFile: boolean) => void,
     ) => {
       fileKey = file.fieldname;
-      if (disallowedTypes && disallowedTypes.includes(file.mimetype)) {
+
+      const extension = path.extname(file.originalname).toLowerCase();
+
+      if (blockedMimeTypes.includes(file.mimetype)) {
         return callback(
           new BadRequestException('invalidFileType', {
             cause: { fieldname: file.fieldname },
@@ -43,18 +58,54 @@ export const uploadOptions = (
           false,
         );
       }
-      if (fileType && !file.mimetype.startsWith(fileType)) {
+
+      if (blockedExtensions.includes(extension)) {
         return callback(
-          new BadRequestException('File type is not supported'),
+          new BadRequestException('invalidFileExtension', {
+            cause: { fieldname: file.fieldname, extension },
+          }),
           false,
         );
       }
+
+      if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(file.mimetype)) {
+        return callback(
+          new BadRequestException('invalidFileType', {
+            cause: { fieldname: file.fieldname, mimetype: file.mimetype },
+          }),
+          false,
+        );
+      }
+
+      if (
+        allowedMimePrefixes.length > 0 &&
+        !allowedMimePrefixes.some((prefix) => file.mimetype.startsWith(prefix))
+      ) {
+        return callback(
+          new BadRequestException('invalidFileType', {
+            cause: { fieldname: file.fieldname, mimetype: file.mimetype },
+          }),
+          false,
+        );
+      }
+
+      if (
+        allowedExtensions.length > 0 &&
+        !allowedExtensions.includes(extension)
+      ) {
+        return callback(
+          new BadRequestException('invalidFileExtension', {
+            cause: { fieldname: file.fieldname, extension },
+          }),
+          false,
+        );
+      }
+
       callback(null, true);
     },
 
-    // Add file size limits (default to 5MB if not specified)
     limits: {
-      fileSize: maxFileSize || 5 * 1024 * 1024, // 5MB default
+      fileSize: options?.maxSize ?? 5 * 1024 * 1024,
     },
 
     storage: diskStorage({
@@ -88,6 +139,14 @@ export const uploadOptions = (
 
   return uploadOptions;
 };
+
+const normalizeExtensions = (extensions?: string[]) =>
+  uniqueValues(
+    (extensions ?? []).map((extension) => extension.toLowerCase().trim()),
+  );
+
+const uniqueValues = (values: string[]) =>
+  [...new Set(values.filter((value) => value.length > 0))];
 
 export const UploadFiles = (
   key: string,
@@ -176,8 +235,13 @@ export const UploadMultipleFiles = (
 };
 interface UploadOptions {
   allowedTypes?: string[]; // e.g., ['image/jpeg', 'image/png']
+  allowedMimeTypes?: string[];
+  allowedMimePrefixes?: string[];
+  allowedExtensions?: string[];
   maxSize?: number; // in bytes (e.g., 5 * 1024 * 1024 for 5MB)
   disallowedTypes?: string[]; // e.g.,
+  blockedMimeTypes?: string[];
+  blockedExtensions?: string[];
   fileTypePrefix?: string; // e.g., 'image/' to allow all image types
 }
 
@@ -194,9 +258,7 @@ export const UploadFile = (
         uploadOptions(
           filePath || 'path',
           undefined,
-          options?.fileTypePrefix,
-          options?.maxSize,
-          options?.disallowedTypes,
+          options,
         ),
       ),
       MapUploadsInterceptor,

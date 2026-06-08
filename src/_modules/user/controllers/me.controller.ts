@@ -32,6 +32,12 @@ import { AdminEndpoint, CustomerEndpoint } from 'src/decorators/api/api-scope.de
 import { SessionType } from '@prisma/client';
 
 const prefix = 'profile';
+const avatarUploadOptions = {
+  maxSize: 5 * 1024 * 1024,
+  allowedExtensions: ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'],
+  allowedMimePrefixes: ['image/'],
+};
+
 @Controller('users/me')
 @ApiTags(tag(prefix))
 @Auth({  })
@@ -112,7 +118,7 @@ export class MeController {
   @Patch('/')
   @CustomerEndpoint(undefined, false,SessionType.ACCESS)
   @AdminEndpoint(undefined, false,SessionType.ACCESS)
-  @UploadFile('image', 'user')
+  @UploadFile('image', 'user', undefined, avatarUploadOptions)
   async updateCurrentUser(
     @Res() res: Response,
     @Body() dto: UpdateUserDTO,

@@ -88,5 +88,7 @@
   "You do not have access to this resource": "You do not have access to this resource",
   "invalid request with 200": "invalid request with 200",
   "Failed to send push notification": "Failed to send push notification",
-  "File uploaded successfully": "File uploaded successfully"
+  "File uploaded successfully": "File uploaded successfully",
+  "No file uploaded": "No file uploaded",
+  "File already exists": "File already exists"
 }

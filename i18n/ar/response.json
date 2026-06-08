@@ -88,5 +88,7 @@
   "You do not have access to this resource": "ليس لديك حق الوصول إلى هذا المورد",
   "invalid request with 200": "طلب غير صالح مع رد 200",
   "Failed to send push notification": "فشل إرسال الإشعار الفوري",
-  "File uploaded successfully": "File uploaded successfully"
+  "File uploaded successfully": "File uploaded successfully",
+  "No file uploaded": "No file uploaded",
+  "File already exists": "File already exists"
 }
