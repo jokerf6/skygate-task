@@ -1,19 +1,18 @@
 model AuditLog {
-    id          Int     @id @default(autoincrement())
-    entityName  String  @map("entity_name")
-    entityId    String  @map("entity_id")
-    entityLabel String? @map("entity_label")
-    action      String
-    userId      String? @map("user_id")
+  id             String   @id @default(uuid())
+  entityName     String   @map("entity_name")
+  entityId       String   @map("entity_id")
+  entityLabel    String?  @map("entity_label")
+  action         String
+  userId         String?  @map("user_id")
+  ip             String?
+  userAgent      String?  @map("user_agent")
+  metadata       Json?
+  originalValues Json?    @map("original_values")
+  newValues      Json?    @map("new_values")
+  // default column
+  createdAt      DateTime @default(now()) @map("created_at")
 
-    ip        String?
-    userAgent String? @map("user_agent")
-    metadata  Json?
-
-    originalValues Json? @map("original_values")
-    newValues      Json? @map("new_values")
-
-    createdAt DateTime @default(now()) @map("created_at")
-
-    @@map("audit_log")
+  @@index([entityName, entityId, createdAt], map: "audit_log_entity_lookup")
+  @@map("audit_log")
 }

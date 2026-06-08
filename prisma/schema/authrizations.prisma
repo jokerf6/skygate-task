@@ -1,9 +1,7 @@
 model Role {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @default(uuid())
   name      Json?     @db.Json
   roleKey   String    @unique @map("key")
-  default   Boolean   @default(false)
-  storeId   Int?      @map("store_id")
   // default columns
   createdAt DateTime  @default(now()) @map("created_at")
   deletedAt DateTime? @map("deleted_at")
@@ -13,11 +11,13 @@ model Role {
   RolePermission             RolePermission[]
   SystemReceiverNotification SystemNotification[] @relation("SystemReceiverNotification")
 
+  @@index([deletedAt], map: "roles_deleted_at")
+  @@index([createdAt], map: "roles_created_at")
   @@map("roles")
 }
 
 model Permission {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @default(uuid())
   name      Json?     @db.Json
   method    String
   prefix    String
@@ -28,18 +28,27 @@ model Permission {
   RolePermission RolePermission[]
 
   @@unique([prefix, method])
+  @@index([default], map: "permissions_default")
+  @@index([deletedAt], map: "permissions_deleted_at")
   @@map("permissions")
 }
 
 model RolePermission {
-  id           Int @id @default(autoincrement())
-  roleId       Int @map("role_id")
-  permissionId Int @map("permission_id")
+  id           String @id @default(uuid())
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
 
   // relations
   Role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   Permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([roleId, permissionId])
+  @@index([roleId], map: "role_permissions_role_id")
+  @@index([permissionId], map: "role_permissions_permission_id")
   @@map("role_permissions")
+}
+
+enum RoleKey {
+  ADMIN
+  CUSTOMER
 }

@@ -36,17 +36,15 @@ export async function seedPermissions(prisma: PrismaClient) {
 export async function seedRoles(prisma: PrismaClient) {
   for (const role of roles) {
     await prisma.role.upsert({
-      where: { roleKey: role.key, default: true },
+      where: { roleKey: role.key },
       create: {
         id: role.id,
         name: role.name,
-        default: true,
         roleKey: role.key,
       },
       update: {
         id: role.id,
         name: role.name,
-        default: true,
         roleKey: role.key,
       },
     });

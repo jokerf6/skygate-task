@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import { seedAdmin } from './admin.seed';
 import { seedLanguage } from './language.seed';
+import { seedNotification } from './notification.seed';
 import {
   seedPermissions,
   seedRolePermissions,
   seedRoles,
 } from './permissionAndRoles.seed';
-import { seedNotification } from './notification.seed';
 
 const prisma = new PrismaClient();
 

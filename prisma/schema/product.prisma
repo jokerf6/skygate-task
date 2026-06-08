@@ -1,0 +1,19 @@
+model Product {
+  id          String    @id @unique @default(uuid())
+  sku         String    @unique
+  name        String
+  description String?
+  price       Float
+  stock       Int
+  image       String    @default("uploads/default.png")
+  // default columns
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  OrderItems OrderItem[]
+
+  @@index([name], map: "products_name")
+  @@index([stock], map: "products_stock")
+  @@index([deletedAt], map: "products_deleted_at")
+  @@map("products")
+}

@@ -1,26 +1,29 @@
 model SystemNotification {
-    id String @id @default(uuid())
+  id String @id @default(uuid())
 
-    // Normal Fields
-    title               Json      @db.Json
-    body                Json      @db.Json
-    emailAllowed        Boolean   @default(true) @map("email_allowed")
-    smsAllowed          Boolean   @default(true) @map("sms_allowed")
-    notificationAllowed Boolean   @default(true) @map("push_notification_allowed")
-    emailTemplate       Json?     @map("email_template") @db.Json
-    event               EVENTS
-    receiverId          String    @map("receiver_id")
-    // Default Fields
-    createdAt           DateTime  @default(now()) @map("created_at")
-    deletedAt           DateTime? @map("deleted_at")
+  // Normal Fields
+  title               Json      @db.Json
+  body                Json      @db.Json
+  emailAllowed        Boolean   @default(true) @map("email_allowed")
+  smsAllowed          Boolean   @default(true) @map("sms_allowed")
+  notificationAllowed Boolean   @default(true) @map("push_notification_allowed")
+  emailTemplate       Json?     @map("email_template") @db.Json
+  event               EVENTS
+  receiverId          String    @map("receiver_id")
+  // Default Fields
+  createdAt           DateTime  @default(now()) @map("created_at")
+  deletedAt           DateTime? @map("deleted_at")
 
-    // Direct Relations
-    Receiver Role @relation("SystemReceiverNotification", fields: [receiverId], references: [roleKey])
+  // Direct Relations
+  Receiver Role @relation("SystemReceiverNotification", fields: [receiverId], references: [roleKey])
 
-    @@map("system_notifications")
+  @@index([receiverId, event], map: "system_notifications_receiver_event")
+  @@index([event], map: "system_notifications_event")
+  @@index([deletedAt], map: "system_notifications_deleted_at")
+  @@map("system_notifications")
 }
 
 enum EVENTS {
-    CREATE_ORDER
-    LOGIN
+  CREATE_ORDER
+  LOGIN
 }

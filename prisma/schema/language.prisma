@@ -1,7 +1,7 @@
 model Language {
   // Normal Fields
   name      String
-  key       String    @id @unique
+  key       String    @id
   file      String
   frontFile String    @map("front_file")
   // default Fields
@@ -10,5 +10,7 @@ model Language {
 
   sessions Session[]
 
+  @@index([name], map: "languages_name")
+  @@index([deletedAt], map: "languages_deleted_at")
   @@map("languages")
 }

@@ -1,3 +1,4 @@
+import { RolesKeys } from '.';
 import { mapPermissionConfigToRole } from '../../../../../src/globals/helpers/mapRoles.helper';
 import { PermissionMap } from '../permissions.provider';
 
@@ -9,17 +10,11 @@ const adminPermissions: PermissionMap = {
   customers: ['get', 'delete', 'patch'],
   'customers/create': ['post'],
   audit: ['get'],
-  // settings: ['get', 'patch'],
-  // 'social-media': ['post', 'get', 'patch', 'delete'],
-  // employees: ['post', 'get', 'patch', 'delete', 'manage'],
-  // cities: ['post', 'get', 'patch', 'delete', 'manage'],
-  // statistics: ['get'],
 } as const satisfies PermissionMap;
 
 export const AdminRole = {
-  id: 1,
+  id: 'test-1',
   name: { en: 'Admin', ar: 'مشرف' },
-  key: 'Admin',
-  default: true,
+  key: RolesKeys.ADMIN,
   permissions: mapPermissionConfigToRole(adminPermissions),
 };
