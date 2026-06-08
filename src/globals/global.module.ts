@@ -5,6 +5,8 @@ import * as admin from 'firebase-admin';
 import { join } from 'path';
 import { LanguagesService } from 'src/_modules/languages/languages.service';
 import { MediaService } from 'src/_modules/media/services/media.service';
+import { RedisModule } from 'src/app/_modules/redis/redis.module';
+import { RateLimitMiddleware } from './middlewares/rate-limit.middleware';
 import { EmailService } from './services/email.service';
 import { MapService } from './services/map.service';
 import { ModelHelperService } from './services/modelHelper.service';
@@ -15,6 +17,7 @@ import { SMSService } from './services/sms.service';
 @Global()
 @Module({
   imports: [
+    RedisModule,
     MailerModule.forRoot({
       transport: {
         host: env('MAIL_HOST'),
@@ -48,6 +51,7 @@ import { SMSService } from './services/sms.service';
     ModelHelperService,
     LanguagesService,
     MediaService,
+    RateLimitMiddleware,
   ],
   exports: [
     ResponseService,
@@ -58,6 +62,7 @@ import { SMSService } from './services/sms.service';
     ModelHelperService,
     LanguagesService,
     MediaService,
+    RateLimitMiddleware,
   ],
 })
 export class GlobalModule {

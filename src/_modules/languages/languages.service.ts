@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as path from 'path';
+import { RedisService } from 'src/app/_modules/redis/redis.service';
 import { firstOrMany } from 'src/globals/helpers/first-or-many';
 import { copyAndRenameFolder } from 'src/globals/helpers/folder.helper';
 import { PrismaService } from 'src/globals/services/prisma.service';
-import { redisClient } from 'src/redis/redis.provider';
 import { MediaService } from '../media/services/media.service';
 import {
   CreateLanguagesDTO,
@@ -20,6 +20,7 @@ export class LanguagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
+    private readonly redis: RedisService,
   ) {}
 
   async create(data: CreateLanguagesDTO) {
@@ -79,11 +80,10 @@ export class LanguagesService {
     );
   }
   async getCashedLanguages() {
-    const cashed = await redisClient.get('languages');
+    const cashed = await this.redis.get('languages');
     if (!cashed) {
       const data = await this.findAll({});
-      await redisClient.set('languages', JSON.stringify(data));
-      redisClient.expire('languages', 300);
+      await this.redis.set('languages', JSON.stringify(data), 300);
       return data;
     }
     return JSON.parse(cashed);

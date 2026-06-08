@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { QueueName } from './worker.constants';
+import { createBullRedisConnectionOptions } from '../redis/redis.connection';
 import { NotificationQueueProcessor } from './processors/notification.processor';
 import { EmailProcessor } from './processors/email.processor';
 import { SmsProcessor } from './processors/sms.processor';
@@ -17,10 +18,7 @@ import { EmailService } from 'src/globals/services/email.service';
     BullModule.forRootAsync({
         imports: [ConfigModule],
         useFactory: async (configService: ConfigService) => ({
-            redis: {
-                host: configService.get('REDIS_HOST'),
-                port: configService.get('REDIS_PORT'),
-            },
+            redis: createBullRedisConnectionOptions(configService),
         }),
         inject: [ConfigService],
     }),

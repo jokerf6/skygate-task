@@ -4,15 +4,17 @@ import {
   Injectable,
   NestMiddleware,
 } from '@nestjs/common';
+import { RedisService } from 'src/app/_modules/redis/redis.service';
 import { NextFunction, Request, Response } from 'express';
-import { redisClient } from 'src/redis/redis.provider';
 
-const WINDOW_SECONDS = env('WINDOW_SECONDS'); // 1 minute
-const MAX_REQUESTS = env('MAX_REQUESTS');
-const BLOCK_DURATION_SECONDS = env('BLOCK_DURATION_SECONDS'); // 1 hour
+const WINDOW_SECONDS = Number(env('WINDOW_SECONDS') ?? 60);
+const MAX_REQUESTS = Number(env('MAX_REQUESTS') ?? 100);
+const BLOCK_DURATION_SECONDS = Number(env('BLOCK_DURATION_SECONDS') ?? 3600);
 
 @Injectable()
 export class RateLimitMiddleware implements NestMiddleware {
+  constructor(private readonly redis: RedisService) {}
+
   async use(req: Request, _: Response, next: NextFunction) {
 
     if (req.baseUrl === '/media') {
@@ -22,7 +24,7 @@ export class RateLimitMiddleware implements NestMiddleware {
     const key = `rate-limit:${req.baseUrl}:${ip}`;
     const blockKey = `rate-limit-blocked:${req.baseUrl}:${ip}`;
 
-    const isBlocked = await redisClient.get(blockKey);
+    const isBlocked = await this.redis.get(blockKey);
     if (isBlocked) {
       throw new HttpException(
         'Too many requests - try again later',
@@ -30,13 +32,13 @@ export class RateLimitMiddleware implements NestMiddleware {
       );
     }
 
-    const current = await redisClient.incr(key);
+    const current = await this.redis.incr(key);
 
     if (current === 1) {
-      await redisClient.expire(key, WINDOW_SECONDS);
+      await this.redis.expire(key, WINDOW_SECONDS);
     }
     if (current > MAX_REQUESTS) {
-      await redisClient.set(blockKey, '1', 'EX', BLOCK_DURATION_SECONDS);
+      await this.redis.set(blockKey, '1', BLOCK_DURATION_SECONDS);
       throw new HttpException(
         'Too many requests - you are blocked for 1 hour',
         HttpStatus.TOO_MANY_REQUESTS,

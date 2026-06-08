@@ -25,7 +25,6 @@ import { buildWinstonOptions } from 'src/configs/winston.config';
 import { NotificationMiddleware } from 'src/globals/middlewares/notification.middleware';
 import { NotificationService } from 'src/globals/services/notification.service';
 import { AuditModule } from './_modules/audit/audit.module';
-import { RedisModule } from './_modules/redis/redis.module';
 import { UploadModule } from './_modules/upload/upload.module';
 import { WorkerModule } from './_modules/worker/worker.module';
 import { AppController } from './app.controller';
@@ -81,7 +80,6 @@ const I18N_DIR = path.join(process.cwd(), './i18n');
     AuthorizationModule,
     UserModule,
     LanguagesModule,
-    RedisModule,
     WorkerModule,
     AuditModule,
   ],

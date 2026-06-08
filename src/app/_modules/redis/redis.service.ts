@@ -1,23 +1,30 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { createRedisConnectionOptions } from './redis.connection';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(RedisService.name);
   private client: Redis;
 
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
     this.client = new Redis({
-      host: this.configService.getOrThrow('REDIS_HOST'),
-      port: this.configService.getOrThrow('REDIS_PORT'),
+      ...createRedisConnectionOptions(this.configService),
       lazyConnect: true,
+      enableReadyCheck: false,
+      maxRetriesPerRequest: null,
+    });
+
+    this.client.on('error', (error) => {
+      this.logger.error(error.message, error.stack);
     });
   }
 
   onModuleDestroy() {
-    this.client.disconnect();
+    this.client?.disconnect();
   }
 
   async get(key: string): Promise<string | null> {
@@ -25,7 +32,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async set(key: string, value: string, ttl?: number): Promise<string> {
-    if (ttl) {
+    if (ttl !== undefined) {
       return this.client.set(key, value, 'EX', ttl);
     }
     return this.client.set(key, value);
@@ -33,6 +40,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async del(key: string): Promise<number> {
     return this.client.del(key);
+  }
+
+  async expire(key: string, ttl: number): Promise<number> {
+    return this.client.expire(key, ttl);
+  }
+
+  async incr(key: string): Promise<number> {
+    return this.client.incr(key);
   }
 
   getClient(): Redis {
