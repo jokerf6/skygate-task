@@ -4,7 +4,6 @@ export const selectAllRolesOBJ = () => {
   const selectArgs: Prisma.RoleSelect = {
     id: true,
     name: true,
-    default: true,
   };
   return selectArgs;
 };

@@ -33,7 +33,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private responses: ResponseService,
-  ) { }
+  ) {}
   // @Post('/')
   // async createUser(@Res() res: Response, @Body() dto: CreateUserDTO) {
   //   await this.userService.create(dto);
@@ -41,7 +41,6 @@ export class UserController {
   // }
 
   @Get(['/', '/:id'])
-
   @ApiQuery({ type: FilterUserDTO })
   @ApiOkResponse(
     buildExamples([
@@ -77,7 +76,7 @@ export class UserController {
   @Delete('/:id')
   @ApiParam({ name: 'id', required: true, type: Number })
   async deleteUser(@Res() res: Response, @Param('id') id: Id) {
-    await this.userService.delete(+id);
+    await this.userService.delete(id);
     return this.responses.success(res, 'User deleted successfully');
   }
 }

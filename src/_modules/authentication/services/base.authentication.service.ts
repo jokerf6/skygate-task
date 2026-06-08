@@ -1,18 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OTPType, SessionType, User } from '@prisma/client';
+import { EVENTS, OTPType, SessionType, User } from '@prisma/client';
 import { HelperService } from 'src/_modules/user/services/helper.service';
 import { UserService } from 'src/_modules/user/services/user.service';
 import { hashPassword } from 'src/globals/helpers/password.helpers';
-import { PrismaService } from 'src/globals/services/prisma.service';
 import { AuditService } from 'src/globals/services/audit.service';
+import { PrismaService } from 'src/globals/services/prisma.service';
+import { SystemNotificationDispatcherService } from 'src/globals/services/system-notification-dispatcher.service';
 import { ForgetPasswordDTO } from '../dto/forgot-password.dto';
-import { BioLoginDTO, EmailPasswordLoginDTO } from '../dto/login.dto';
+import { EmailPasswordLoginDTO } from '../dto/login.dto';
 import { ResetPasswordDTO } from '../dto/reset-password.dto';
 import { VerifyOtpDTO } from '../dto/verify-otp.dto';
 import { TokenService } from './jwt.service';
 import { OTPService } from './otp.service';
-import { EVENTS } from '@prisma/client';
-import { SystemNotificationDispatcherService } from 'src/globals/services/system-notification-dispatcher.service';
 
 @Injectable()
 export class BaseAuthenticationService {
@@ -53,15 +52,16 @@ export class BaseAuthenticationService {
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
-    const {token: AccessToken, jti: AccessJti} = await this.tokenService.generateToken(
-      user.id,
-      ip,
-      undefined,
-      undefined,
-      SessionType.ACCESS,
-      dto.locale,
-    );
-    const {token: RefreshToken} = await this.tokenService.generateToken(
+    const { token: AccessToken, jti: AccessJti } =
+      await this.tokenService.generateToken(
+        user.id,
+        ip,
+        undefined,
+        undefined,
+        SessionType.ACCESS,
+        dto.locale,
+      );
+    const { token: RefreshToken } = await this.tokenService.generateToken(
       user.id,
       ip,
       AccessJti,
@@ -88,20 +88,6 @@ export class BaseAuthenticationService {
     };
   }
 
-  async getBioInfo(dto: BioLoginDTO) {
-    const { deviceId } = dto;
-    const user = await this.prisma.user.findUnique({
-      where: {
-        deviceId,
-      },
-      select: {
-        roleKey: true,
-        email: true,
-      },
-    });
-    return user;
-  }
-
   async validateDto(dto: EmailPasswordLoginDTO) {
     const { email } = dto;
     if (!email) {
@@ -116,7 +102,7 @@ export class BaseAuthenticationService {
     await this.userHelper.userCanLogin(user);
     await this.otpService.generateOTP(user.id, OTPType.PASSWORD_RESET);
 
-    const {token} = await this.tokenService.generateToken(
+    const { token } = await this.tokenService.generateToken(
       user.id,
       ip,
       undefined,
@@ -142,7 +128,7 @@ export class BaseAuthenticationService {
 
   async resendOtp(ip: string, userId: Id) {
     await this.otpService.generateOTP(userId, OTPType.EMAIL_VERIFICATION);
-    const {token} = await this.tokenService.generateToken(
+    const { token } = await this.tokenService.generateToken(
       userId,
       ip,
       undefined,
@@ -167,14 +153,15 @@ export class BaseAuthenticationService {
       data: { verified: true },
     });
     const data = await this.userService.getProfile(userId);
-    const {token: AccessToken, jti: AccessJti} = await this.tokenService.generateToken(
-      user.id,
-      ip,
-      undefined,
-      undefined,
-      SessionType.ACCESS,
-    );
-    const {token: RefreshToken} = await this.tokenService.generateToken(
+    const { token: AccessToken, jti: AccessJti } =
+      await this.tokenService.generateToken(
+        user.id,
+        ip,
+        undefined,
+        undefined,
+        SessionType.ACCESS,
+      );
+    const { token: RefreshToken } = await this.tokenService.generateToken(
       user.id,
       ip,
       AccessJti,
@@ -188,10 +175,10 @@ export class BaseAuthenticationService {
     };
   }
 
-  async verifyReset(userId: Id, dto: VerifyOtpDTO,ip: string) { 
+  async verifyReset(userId: Id, dto: VerifyOtpDTO, ip: string) {
     const user = await this.userHelper.userExist({ id: userId });
     await this.otpService.verifyOTP(userId, dto.otp, OTPType.PASSWORD_RESET);
-    const {token} = await this.tokenService.generateToken(
+    const { token } = await this.tokenService.generateToken(
       userId,
       ip,
       undefined,
@@ -206,7 +193,7 @@ export class BaseAuthenticationService {
       where: { jti },
       select: { userId: true },
     });
-    
+
     if (session) {
       await this.auditService.logAction({
         action: 'LOGOUT',
@@ -221,7 +208,7 @@ export class BaseAuthenticationService {
 
   async refreshToken(ip: string, userId: Id) {
     const data = await this.userService.getProfile(userId);
-    const {token: AccessToken} = await this.tokenService.generateToken(
+    const { token: AccessToken } = await this.tokenService.generateToken(
       userId,
       ip,
       undefined,
@@ -263,7 +250,7 @@ export class BaseAuthenticationService {
   private async sendNewDeviceNotification(userId: Id, localeKey?: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, phone: true, roleKey: true },
+      select: { id: true, email: true, roleKey: true },
     });
 
     if (!user) return;

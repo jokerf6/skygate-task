@@ -41,7 +41,7 @@ export class AuditController {
   @Get(':id')
   @AdminEndpoint(PREFIX)
   @ApiOperation({ summary: 'Get specific audit log entry' })
-  async getLog(@Res() res: Response, @Param('id', ParseIntPipe) id: number) {
+  async getLog(@Res() res: Response, @Param('id', ParseIntPipe) id: Id) {
     const data = await this.auditService.getLog(id);
     return this.response.success(res, 'get audit log', data);
   }

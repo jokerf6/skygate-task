@@ -14,7 +14,6 @@ import { TokenService } from '../../authentication/services/jwt.service';
 import { OTPService } from '../../authentication/services/otp.service';
 import {
   CreateUserDTO,
-  EnableBioDTO,
   UpdateUserDTO,
   UpdateUserPasswordDTO,
 } from '../dto/create.user.dto';
@@ -73,7 +72,6 @@ export class UserService {
     await this.prisma.user.update({
       where: { id },
       data: {
-        phone: `deleted_${user.phone}_${user.id}`,
         email: `deleted_${user.email}_${user.id}`,
       },
     });
@@ -154,16 +152,6 @@ export class UserService {
     });
   }
 
-  async enableBio(userId: Id, dto: EnableBioDTO) {
-    await this.prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        deviceId: dto.deviceId,
-      },
-    });
-  }
   async updatePassword(id: Id, data: UpdateUserPasswordDTO) {
     const { password, newPassword } = data;
     const user = await this.prisma.user.findUnique({ where: { id } });
@@ -181,7 +169,6 @@ export class UserService {
   }
 
   async getProfile(id, jti?: string) {
-
     const user = await this.getUser(id, jti);
     return user;
   }
@@ -205,4 +192,3 @@ export class UserService {
     });
   }
 }
-

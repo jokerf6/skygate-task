@@ -8,11 +8,9 @@ import {
   QueryResolver,
 } from 'nestjs-i18n';
 import * as path from 'path';
-import { AuthenticationModule } from 'src/_modules/authentication/authentication.module';
 import { AuthorizationModule } from 'src/_modules/authorization/authorization.module';
 import { LanguagesModule } from 'src/_modules/languages/languages.module';
 import { MediaModule } from 'src/_modules/media/media.module';
-import { UserModule } from 'src/_modules/user/user.module';
 import { GlobalModule } from 'src/globals/global.module';
 import { LocaleMiddleware } from 'src/globals/middlewares/locale.middleware';
 import { RateLimitMiddleware } from 'src/globals/middlewares/rate-limit.middleware';
@@ -76,9 +74,9 @@ const I18N_DIR = path.join(process.cwd(), './i18n');
     // NotificationModule,
     UploadModule,
     MediaModule,
-    AuthenticationModule,
+    // AuthenticationModule,
     AuthorizationModule,
-    UserModule,
+    // UserModule,
     LanguagesModule,
     WorkerModule,
     AuditModule,

@@ -55,10 +55,9 @@ export class HelperService {
       },
     });
 
-
     if (!isFound) throw new UnprocessableEntityException(message);
 
-    if(isFound && roleKey && isFound.roleKey !== roleKey){
+    if (isFound && roleKey && isFound.roleKey !== roleKey) {
       throw new UnprocessableEntityException(message);
     }
     if (password) validateUserPassword(password, isFound.password);
@@ -97,7 +96,7 @@ export class HelperService {
     }
     if (!user.verified && checkVerified) {
       await this.OTPService.generateOTP(user.id, OTPType.EMAIL_VERIFICATION);
-      const {token} = await this.Token.generateToken(
+      const { token } = await this.Token.generateToken(
         user.id,
         ip,
         undefined,
@@ -112,7 +111,6 @@ export class HelperService {
               id: user.id,
               name: user.name,
               email: user.email,
-              phone: user.phone,
             },
             token,
           },

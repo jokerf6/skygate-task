@@ -7,7 +7,7 @@ import {
   Patch,
   Res,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Auth } from 'src/_modules/authentication/decorators/auth.decorator';
 import {
@@ -17,12 +17,10 @@ import {
 import { Filter } from 'src/decorators/param/filter.decorator';
 import { RequiredIdParam } from 'src/dtos/params/id-param.dto';
 import { isOne } from 'src/globals/helpers/first-or-many';
-import { buildExamples } from 'src/globals/helpers/generate-example.helper';
 import { tag } from 'src/globals/helpers/tag.helper';
 import { ResponseService } from 'src/globals/services/response.service';
 import { UpdateCustomerDTO } from '../dto/create.customer.dto';
 import { FilterCustomerDTO } from '../dto/filter.customer.dto';
-import { selectUserOBJ } from 'src/_modules/user/prisma-args/user.prisma-select';
 import { CustomerService } from '../services/customer.service';
 
 const prefix = 'customers';
@@ -37,7 +35,6 @@ export class CustomerController {
 
   @Get(['/', '/:id'])
   @ApiQuery({ type: FilterCustomerDTO })
-  
   @ApiOptionalIdParam()
   async getAll(
     @Res() res: Response,
@@ -71,7 +68,7 @@ export class CustomerController {
   @Delete('/:id')
   @ApiParam({ name: 'id', required: true, type: Number })
   async deleteUser(@Res() res: Response, @Param('id') id: Id) {
-    await this.service.delete(+id);
+    await this.service.delete(id);
     return this.responses.success(res, 'Customer deleted successfully');
   }
 }

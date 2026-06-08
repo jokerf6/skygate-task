@@ -1,5 +1,4 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
-import { EVENTS } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { resolveSystemNotificationEvent } from 'src/globals/helpers/system-notification-event.helper';
@@ -65,7 +64,6 @@ export class NotificationMiddleware implements NestMiddleware {
         id: true,
         roleKey: true,
         email: true,
-        phone: true,
       },
     });
 
@@ -80,7 +78,6 @@ export class NotificationMiddleware implements NestMiddleware {
       id: user.id,
       roleKey: user.roleKey,
       email: user.email,
-      phone: user.phone,
       languageId: session?.languageId ?? 'en',
     };
   }

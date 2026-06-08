@@ -21,7 +21,6 @@ export class CanUserAccessModelRowIdInterceptor implements NestInterceptor {
     private readonly ownerFieldName?: string,
     private readonly ownerCurrentUserField?: string,
     private readonly indirectRelation?: boolean,
-
   ) {}
   private prisma = new PrismaClient();
   private globalHelpers = new GlobalHelpers(new PrismaService({} as any));
@@ -34,13 +33,21 @@ export class CanUserAccessModelRowIdInterceptor implements NestInterceptor {
     // const method = request.method.toUpperCase();
     const user = request.user as CurrentUser;
     const params = request.params;
-    const id = +params?.[this.idParamName];
+    const id = params?.[this.idParamName];
     if (!id || isNaN(id)) {
       throw new BadRequestException(
         `Missing required parameter: ${this.idParamName}`,
       );
     }
-    await this.globalHelpers.canUserAccessResource(user, this.modelName,this.prefix, id,this.ownerFieldName,this.ownerCurrentUserField,this.indirectRelation);
+    await this.globalHelpers.canUserAccessResource(
+      user,
+      this.modelName,
+      this.prefix,
+      id,
+      this.ownerFieldName,
+      this.ownerCurrentUserField,
+      this.indirectRelation,
+    );
     return next.handle();
   }
 }
@@ -48,9 +55,9 @@ export function CanUserAccessModelRowId(parameters: {
   modelName: keyof PrismaClient;
   prefix: string;
   idParamName?: string;
-  ownerFieldName?: string,
-    ownerCurrentUserField?: string
-    indirectRelation?:boolean
+  ownerFieldName?: string;
+  ownerCurrentUserField?: string;
+  indirectRelation?: boolean;
 }) {
   return applyDecorators(
     UseInterceptors(
@@ -58,10 +65,9 @@ export function CanUserAccessModelRowId(parameters: {
         parameters.modelName,
         parameters.prefix,
         parameters?.idParamName || 'id',
-        parameters?.ownerFieldName ,
-        parameters?.ownerCurrentUserField ,
-        parameters?.indirectRelation
-        
+        parameters?.ownerFieldName,
+        parameters?.ownerCurrentUserField,
+        parameters?.indirectRelation,
       ),
     ),
   );

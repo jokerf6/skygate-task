@@ -1,5 +1,5 @@
 declare global {
-  type Id = number;
+  type Id = string;
   type Json = Record<string, any>;
 }
 export {};

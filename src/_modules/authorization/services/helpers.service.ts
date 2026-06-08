@@ -14,7 +14,7 @@ export class HelpersService {
       throw new BadRequestException('Role not found');
     }
 
-    if (role.default && user.Role.roleKey !== RolesKeys.ADMIN) {
+    if (user.Role.roleKey !== RolesKeys.ADMIN) {
       const hasPermission = validatePermissions(
         `roles_manage`,
         user.permissions as any[],
@@ -23,11 +23,7 @@ export class HelpersService {
         throw new BadRequestException('You cannot modify a default role');
       }
     }
-    if (role.storeId !== user.storeId) {
-      throw new BadRequestException(
-        'You cannot modify a role from another store',
-      );
-    }
+
     return role;
   }
 }

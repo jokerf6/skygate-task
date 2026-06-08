@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from './prisma.service';
 import { getAuditArgs } from 'src/app/_modules/audit/prisma-args/audit.prisma.args';
+import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class AuditService {
@@ -68,7 +68,7 @@ export class AuditService {
     return { data, total };
   }
 
-  async getLog(id: number) {
+  async getLog(id: Id) {
     return await this.prisma.auditLog.findUnique({
       where: { id },
     });
@@ -77,6 +77,6 @@ export class AuditService {
   getTrackedEntities() {
     const excludedModels = ['AuditLog', 'OTP', 'Session'];
     const allModels = Prisma.ModelName ? Object.values(Prisma.ModelName) : [];
-    return allModels.filter(model => !excludedModels.includes(model));
+    return allModels.filter((model) => !excludedModels.includes(model));
   }
 }

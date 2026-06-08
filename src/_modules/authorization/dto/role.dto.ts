@@ -16,11 +16,9 @@ export class CreateRoleDTO {
   @ValidateString()
   @ValidateUnique<'role'>({ model: 'role' })
   roleKey: string;
-    @Optional({ type: 'number', isArray: true })
+  @Optional({ type: 'number', isArray: true })
   @ValidateNumber()
   @ValidateExist<'permission'>({ model: 'permission', isArray: true })
-  permissionIds: number[];
+  permissionIds: Id[];
 }
-export class UpdateRoleDTO extends PartialType(CreateRoleDTO) {
-
-}
+export class UpdateRoleDTO extends PartialType(CreateRoleDTO) {}

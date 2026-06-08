@@ -2,10 +2,9 @@ import { Prisma, SessionType, User } from '@prisma/client';
 import { grouped } from '../helpers/auth.groupBy.helper';
 
 export type FlattenedUser = {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  phone: string;
   verified: boolean;
   active: boolean;
   image: string;
@@ -14,7 +13,7 @@ export type FlattenedUser = {
   Nationality?: {
     id: number;
     name: string;
-  },
+  };
   allowNotificationByEmail: boolean;
   createdAt: Date;
   deletedAt: Date | null;
@@ -65,7 +64,6 @@ export const transformFlattenUser = (data: any | any[]): any => {
       id: user.id,
       name: user.name,
       email: user.email,
-      phone: user.phone,
       verified: user.verified,
       active: user.active,
       image: user.image,
@@ -116,28 +114,26 @@ export const selectUserOBJ = (jti?: string) => {
     id: true,
     name: true,
     email: true,
-    phone: true,
     verified: true,
     roleKey: true,
     active: true,
     image: true,
-    wallet: true,
     lastLoginAt: true,
     allowNotificationByEmail: true,
 
     Sessions: {
       where: {
         jti,
-        type: SessionType.ACCESS
+        type: SessionType.ACCESS,
       },
       select: {
         Language: {
           select: {
             key: true,
             name: true,
-          }
-        }
-      }
+          },
+        },
+      },
     },
     createdAt: true,
     deletedAt: true,
@@ -163,21 +159,21 @@ export const selectUserWithRoleAndPermissionsOBJ = (jti: string) => {
     ...(selectUserWithRoleOBJ(jti) as Prisma.UserSelect),
     ...(jti
       ? {
-        Sessions: {
-          where: {
-            jti,
-            type: SessionType.ACCESS,
-          },
-          select: {
-            Language: {
-              select: {
-                key: true,
-                name: true,
+          Sessions: {
+            where: {
+              jti,
+              type: SessionType.ACCESS,
+            },
+            select: {
+              Language: {
+                select: {
+                  key: true,
+                  name: true,
+                },
               },
             },
           },
-        },
-      }
+        }
       : {}),
     Role: {
       select: {
