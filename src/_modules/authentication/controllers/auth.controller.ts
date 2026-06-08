@@ -1,22 +1,20 @@
-import { Body, Controller, Post, Res, UnprocessableEntityException, UseInterceptors } from '@nestjs/common';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, Res } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { SessionType } from '@prisma/client';
 import { Response } from 'express';
 import { CurrentUser } from 'src/_modules/authentication/decorators/current-user.decorator';
-import { RolesKeys } from 'src/_modules/authorization/providers/roles';
 import { cookieConfig } from 'src/configs/cookie.config';
+import { ApiScope } from 'src/decorators/api/api-scope.decorator';
 import { ApiDefaultOkResponse } from 'src/globals/helpers/generate-example.helper';
 import { tag } from 'src/globals/helpers/tag.helper';
 import { ResponseService } from 'src/globals/services/response.service';
-import { Auth } from '../decorators/auth.decorator';
 import { IpAddress } from '../decorators/ip.decorator';
 import { ForgetPasswordDTO } from '../dto/forgot-password.dto';
-import { BioLoginDTO, EmailPasswordLoginDTO } from '../dto/login.dto';
+import { EmailPasswordLoginDTO } from '../dto/login.dto';
+import { RegisterDTO } from '../dto/register.dto';
 import { ResetPasswordDTO } from '../dto/reset-password.dto';
 import { VerifyOtpDTO } from '../dto/verify-otp.dto';
-import { RoleInterceptor } from '../interceptor/role.interceptor';
 import { BaseAuthenticationService } from '../services/base.authentication.service';
-import { AdminEndpoint, AllEndpoint, CustomerEndpoint } from 'src/decorators/api/api-scope.decorator';
 
 const prefix = 'auth';
 @Controller(prefix)
@@ -27,11 +25,8 @@ export class BaseAuthenticationController {
     private readonly response: ResponseService,
   ) {}
 
-
-  
   @Post('refresh-token')
-   @CustomerEndpoint(undefined, false, SessionType.REFRESH)
-  @AdminEndpoint(undefined, false, SessionType.REFRESH)
+  @ApiScope(['admin', 'customer'], { type: SessionType.REFRESH })
   @ApiDefaultOkResponse(null)
   async refreshToken(
     @IpAddress() ip: string,
@@ -46,27 +41,17 @@ export class BaseAuthenticationController {
     });
   }
 
-
-
-  @Post('login/:roleKey')
-  @CustomerEndpoint(undefined, true)
-  @AdminEndpoint(undefined, true)
-  @ApiParam({
-    name:'roleKey',
-    enum: Object.values(RolesKeys),
-    required: true,
-  })
-  @UseInterceptors(RoleInterceptor)
+  @Post('login')
+  @ApiScope(['admin', 'customer'], { visitor: true })
   async login(
     @IpAddress() ip: string,
     @Res() res: Response,
     @Body() dto: EmailPasswordLoginDTO,
   ) {
-    const { user, AccessToken, RefreshToken } =
-      await this.service.login(ip, dto);
-
-   if(dto.deviceId) await this.service.saveDevice(dto.deviceId, user.id, dto.locale);
-
+    const { user, AccessToken, RefreshToken } = await this.service.login(
+      ip,
+      dto,
+    );
     res.cookie(env('ACCESS_TOKEN_COOKIE_KEY'), AccessToken, cookieConfig);
 
     return this.response.success(res, 'User Logged In Successfully', {
@@ -76,9 +61,25 @@ export class BaseAuthenticationController {
     });
   }
 
+  @ApiScope(['customer'], { visitor: true })
+  @Post(['register'])
+  async createUser(
+    @IpAddress() ip: string,
+    @Res() res: Response,
+    @Body() dto: RegisterDTO,
+  ) {
+    const { user, token } = await this.service.create(dto, ip);
+
+    res.cookie(env('VERIFY_TOKEN_COOKIE_KEY'), token, cookieConfig);
+
+    return this.response.success(res, 'customer created successfully', {
+      user,
+      token,
+    });
+  }
+
   @Post('forget-password')
-  @CustomerEndpoint(undefined, true)
-  @AdminEndpoint(undefined, true)
+  @ApiScope(['admin', 'customer'], { visitor: true })
   async forgetPassword(
     @IpAddress() ip: string,
     @Res() res: Response,
@@ -95,8 +96,7 @@ export class BaseAuthenticationController {
   }
 
   @Post('resend-otp')
-    @CustomerEndpoint(undefined, false, SessionType.VERIFY)
-  @AdminEndpoint(undefined, false, SessionType.VERIFY)
+  @ApiScope(['admin', 'customer'], { type: SessionType.VERIFY })
   async resendOtp(
     @IpAddress() ip: string,
     @Res() res: Response,
@@ -108,16 +108,18 @@ export class BaseAuthenticationController {
   }
 
   @Post('verify')
-  @CustomerEndpoint(undefined, false, SessionType.VERIFY)
-  @AdminEndpoint(undefined, false, SessionType.VERIFY)
+  @ApiScope(['admin', 'customer'], { type: SessionType.VERIFY })
   async verifyUser(
     @IpAddress() ip: string,
     @Res() res: Response,
     @Body() dto: VerifyOtpDTO,
     @CurrentUser() currentUser: CurrentUser,
   ) {
-    const { user, AccessToken, RefreshToken } =
-      await this.service.verify(ip, currentUser.id, dto);
+    const { user, AccessToken, RefreshToken } = await this.service.verify(
+      ip,
+      currentUser.id,
+      dto,
+    );
 
     res.cookie(env('ACCESS_TOKEN_COOKIE_KEY'), AccessToken, cookieConfig);
 
@@ -129,15 +131,18 @@ export class BaseAuthenticationController {
   }
 
   @Post('verify-reset-password')
-    @CustomerEndpoint(undefined, false, SessionType.VERIFY)
-  @AdminEndpoint(undefined, false, SessionType.VERIFY)
+  @ApiScope(['admin', 'customer'], { type: SessionType.VERIFY })
   async verifyOtp(
     @IpAddress() ip: string,
     @Res() res: Response,
     @Body() dto: VerifyOtpDTO,
     @CurrentUser() currentUser: CurrentUser,
   ) {
-    const { user, token } = await this.service.verifyReset(currentUser.id, dto,ip);
+    const { user, token } = await this.service.verifyReset(
+      currentUser.id,
+      dto,
+      ip,
+    );
 
     res.cookie(env('RESET_PASSWORD_TOKEN_COOKIE_KEY'), token, cookieConfig);
 
@@ -148,8 +153,7 @@ export class BaseAuthenticationController {
   }
 
   @Post('reset-password')
-  @CustomerEndpoint(undefined, false, SessionType.PASSWORD_RESET)
-  @AdminEndpoint(undefined, false, SessionType.PASSWORD_RESET)
+  @ApiScope(['admin', 'customer'], { type: SessionType.PASSWORD_RESET })
   async resetPassword(
     @Res() res: Response,
     @Body() dto: ResetPasswordDTO,
@@ -161,8 +165,7 @@ export class BaseAuthenticationController {
   }
 
   @Post('logout')
-  @CustomerEndpoint(undefined, false,SessionType.ACCESS)
-  @AdminEndpoint(undefined, false,SessionType.ACCESS)
+  @ApiScope(['admin', 'customer'], { type: SessionType.ACCESS })
   async logout(@Res() res: Response, @CurrentUser() { jti }: CurrentUser) {
     await this.service.logout(jti);
     return this.response.success(res, 'User Logged Out');

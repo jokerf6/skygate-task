@@ -28,7 +28,7 @@ import { UserService } from '../services/user.service';
 import { LocaleHeader } from 'src/_modules/authentication/decorators/locale.decorator';
 import { FilterUserCouponDTO } from '../dto/filter.user.coupon.dto';
 import { Filter } from 'src/decorators/param/filter.decorator';
-import { AdminEndpoint, CustomerEndpoint } from 'src/decorators/api/api-scope.decorator';
+import { ApiScope } from 'src/decorators/api/api-scope.decorator';
 import { SessionType } from '@prisma/client';
 
 const prefix = 'profile';
@@ -47,8 +47,7 @@ export class MeController {
     private responses: ResponseService,
   ) {}
   @Get('/permissions')
-   @CustomerEndpoint(undefined, false,SessionType.ACCESS)
-    @AdminEndpoint(undefined, false,SessionType.ACCESS)
+  @ApiScope(['admin', 'customer'])
   @ApiOkResponse(
     buildExamples([
       {
@@ -82,8 +81,7 @@ export class MeController {
 
 
   @Get('/')
-   @CustomerEndpoint(undefined, false,SessionType.ACCESS)
-  @AdminEndpoint(undefined, false,SessionType.ACCESS)
+  @ApiScope(['admin', 'customer'])
   async Profile(@Res() res: Response, @CurrentUser() currentUser: CurrentUser) {
     const user = await this.userService.getProfile(
       currentUser.id,
@@ -92,8 +90,7 @@ export class MeController {
     
     return this.responses.success(res, 'User returned successfully', user);
   }
-   @CustomerEndpoint(undefined, false,SessionType.ACCESS)
-  @AdminEndpoint(undefined, false,SessionType.ACCESS)
+  @ApiScope(['admin', 'customer'])
   @Patch('/change-password')
   async updatePassword(
     @Res() res: Response,
@@ -116,8 +113,7 @@ export class MeController {
   //   return this.responses.success(res, 'locale updated successfully');
   // }
   @Patch('/')
-  @CustomerEndpoint(undefined, false,SessionType.ACCESS)
-  @AdminEndpoint(undefined, false,SessionType.ACCESS)
+  @ApiScope(['admin', 'customer'])
   @UploadFile('image', 'user', undefined, avatarUploadOptions)
   async updateCurrentUser(
     @Res() res: Response,

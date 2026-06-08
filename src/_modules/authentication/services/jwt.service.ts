@@ -2,9 +2,8 @@ import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SessionType } from '@prisma/client';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import * as jwt from 'jsonwebtoken';
-import { jwtConfig } from 'src/configs/jwt.config';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'src/globals/services/prisma.service';
 
 @Injectable()
@@ -41,7 +40,7 @@ export class TokenService {
     fcmToken?: string,
     type: SessionType = SessionType.ACCESS,
     locale: string = 'en',
-  ): Promise<{token: string, jti: string}> {
+  ): Promise<{ token: string; jti: string }> {
     if (
       !([SessionType.ACCESS, SessionType.REFRESH] as SessionType[]).includes(
         type,
@@ -56,7 +55,7 @@ export class TokenService {
         },
       });
     }
- 
+
     const session = await this.prisma.session.create({
       data: {
         ipAddress,
@@ -73,7 +72,7 @@ export class TokenService {
 
     const token = jwt.sign({ jti: session.jti, id: userId }, secret, config);
 
-    return {token, jti: session.jti};
+    return { token, jti: session.jti };
   }
 
   private getTokenConfig(type: SessionType): jwt.SignOptions {

@@ -31,7 +31,6 @@ export class HelperService {
   async userExist({
     message,
     id,
-    phone,
     email,
     password,
     roleKey,
@@ -39,7 +38,6 @@ export class HelperService {
   }: {
     message?: string;
     id?: Id;
-    phone?: string;
     email?: string;
     password?: string;
     roleKey?: string;
@@ -47,19 +45,15 @@ export class HelperService {
     ValidatePassword?: boolean;
   }): Promise<User> {
     message = message ?? 'user_not_found';
-    const isFound = await this.prisma.user.findFirst({
+    const isFound = await this.prisma.user.findUnique({
       where: {
         id,
         email,
-        deletedAt: null,
       },
     });
 
     if (!isFound) throw new UnprocessableEntityException(message);
 
-    if (isFound && roleKey && isFound.roleKey !== roleKey) {
-      throw new UnprocessableEntityException(message);
-    }
     if (password) validateUserPassword(password, isFound.password);
 
     await this.userCanLogin(isFound, checkVerified);
@@ -68,22 +62,11 @@ export class HelperService {
     return isFound;
   }
 
-  async userExistOrThrow({
-    id,
-    email,
-    phone,
-    roleKey,
-  }: {
-    id?: Id;
-    email?: string;
-    phone?: string;
-    roleKey?: string;
-  }) {
-    const isFound = await this.prisma.user.findFirst({
+  async userExistOrThrow({ id, email }: { id?: Id; email?: string }) {
+    const isFound = await this.prisma.user.findUnique({
       where: {
         id,
         email,
-        deletedAt: null,
       },
     });
 

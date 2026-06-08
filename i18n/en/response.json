@@ -1,4 +1,5 @@
 {
+  "EXIST": "{property} value: Not Found",
   "Unauthorized": "Unauthorized",
   "Access token refreshed successfully": "Access token refreshed successfully",
   "User Logged In Successfully": "User Logged In Successfully",

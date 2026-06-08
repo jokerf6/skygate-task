@@ -1,4 +1,5 @@
 {
+  "EXIST": "{property}: غير موجود",
   "Unauthorized": "غير مصرح",
   "Access token refreshed successfully": "تم تحديث رمز الوصول بنجاح",
   "User Logged In Successfully": "تم تسجيل دخول المستخدم بنجاح",

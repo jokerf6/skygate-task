@@ -19,7 +19,7 @@ type ResOptions = {
 
 @Injectable()
 export class ResponseService {
-  constructor(private readonly i18n: I18nService) { }
+  constructor(private readonly i18n: I18nService) {}
 
   private buildErrorResponse(
     message: string,
@@ -54,17 +54,26 @@ export class ResponseService {
       messageKey,
     );
 
-    const { code: _httpCode, errorCode, details: optionDetails, ...restOptions } = options;
+    const {
+      code: _httpCode,
+      errorCode,
+      details: optionDetails,
+      ...restOptions
+    } = options;
     const payloadDetails =
-      details ?? optionDetails ?? (Object.keys(restOptions).length ? restOptions : undefined);
+      details ??
+      optionDetails ??
+      (Object.keys(restOptions).length ? restOptions : undefined);
 
-    return response.status(status).json(
-      this.buildErrorResponse(
-        message,
-        errorCode || this.getErrorCode(status),
-        payloadDetails,
-      ),
-    );
+    return response
+      .status(status)
+      .json(
+        this.buildErrorResponse(
+          message,
+          errorCode || this.getErrorCode(status),
+          payloadDetails,
+        ),
+      );
   }
 
   async custom(
@@ -181,7 +190,13 @@ export class ResponseService {
     messageKey: string,
     options: ResOptions = {},
   ) {
-    return this.sendError(response, HttpStatus.NOT_FOUND, messageKey, undefined, options);
+    return this.sendError(
+      response,
+      HttpStatus.NOT_FOUND,
+      messageKey,
+      undefined,
+      options,
+    );
   }
 
   async tooManyRequest(
@@ -282,9 +297,8 @@ export class ResponseService {
     }
 
     if (lang && Array.isArray(lang)) {
-      const { extractedProperty, extractedKey } = this.getMessageArgs(
-        messageKey,
-      );
+      const { extractedProperty, extractedKey } =
+        this.getMessageArgs(messageKey);
 
       if (extractedKey)
         return this.i18n.translate(`response.${extractedKey}`, {
@@ -298,9 +312,8 @@ export class ResponseService {
       });
     }
     if (lang && typeof lang === 'string') {
-      const { extractedProperty, extractedKey } = this.getMessageArgs(
-        messageKey,
-      );
+      const { extractedProperty, extractedKey } =
+        this.getMessageArgs(messageKey);
 
       if (extractedKey)
         return this.i18n.translate(`response.${extractedKey}`, {

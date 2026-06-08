@@ -6,7 +6,6 @@ export async function seedAdmin(prisma: PrismaClient) {
     id: 'test-1',
     name: `super admin`,
     email: 'super@super.com',
-    phone: `+966 0192725145`,
     roleKey: RolesKeys.ADMIN,
     verified: true,
     password: bcrypt.hashSync('Default@123', +process.env.HASH_SALT),
