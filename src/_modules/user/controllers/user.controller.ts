@@ -27,18 +27,13 @@ import { UserService } from '../services/user.service';
 
 const prefix = 'users';
 @Controller(prefix)
-@ApiTags(tag(prefix), tag('auth'))
+@ApiTags(tag(prefix))
 @Auth({ prefix })
 export class UserController {
   constructor(
     private userService: UserService,
     private responses: ResponseService,
   ) {}
-  // @Post('/')
-  // async createUser(@Res() res: Response, @Body() dto: CreateUserDTO) {
-  //   await this.userService.create(dto);
-  //   return this.responses.success(res, 'user created successfully');
-  // }
 
   @Get(['/', '/:id'])
   @ApiQuery({ type: FilterUserDTO })

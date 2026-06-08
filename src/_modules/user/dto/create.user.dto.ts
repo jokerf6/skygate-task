@@ -41,14 +41,6 @@ export class UpdateUserDTO extends OmitType(PartialType(CreateUserDTO), [
   'roleKey',
 ]) {
   @Optional()
-  @ValidateString()
-  deviceId?: string;
-
-  @Optional()
-  @ValidateString()
-  fcm?: string;
-
-  @Optional()
   @ValidateBoolean()
   allowNotificationByEmail?: boolean;
 
