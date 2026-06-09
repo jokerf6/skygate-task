@@ -23,7 +23,7 @@ export const permissions = [
     default: true,
     methods: ['post', 'get', 'delete', 'patch'],
   },
-    {
+  {
     name: { en: 'Audit', ar: 'السجل' },
     prefix: 'audit',
     default: true,
@@ -47,13 +47,13 @@ export const permissions = [
     default: false,
     methods: ['get', 'patch', 'delete'],
   },
-   {
+  {
     name: { en: 'Customers Create', ar: 'إنشاء عملاء' },
     prefix: 'customers/create',
     default: true,
     methods: ['post'],
   },
-  
+
   // {
   //   name: { en: 'filters', ar: 'الفلاتر' },
   //   prefix: 'filters',
@@ -72,19 +72,35 @@ export const permissions = [
   //   default: false,
   //   methods: ['post', 'get', 'patch', 'delete'],
   // },
- 
-  
+
   //   {
   //   name: { en: 'Cities', ar: 'المدن' },
   //   prefix: 'cities',
   //   default: true,
   //   methods: ['post', 'get', 'patch', 'delete','manage'],
   // },
-      
+  {
+    name: { en: 'Products', ar: 'المنتجات' },
+    prefix: 'products',
+    default: true,
+    methods: ['post', 'get', 'delete', 'put'],
+  },
+  // {
+  //  name: { en: 'Orders', ar: 'الطلبات' },
+  //   prefix: 'orders',
+  //   default: true,
+  //   methods: ['post', 'get'],
+  // },
 ];
 
 type Permission = (typeof permissions)[number];
 
-export type PermissionMethod = 'get' | 'post' | 'put' | 'patch' | 'delete'|'manage';
+export type PermissionMethod =
+  | 'get'
+  | 'post'
+  | 'put'
+  | 'patch'
+  | 'delete'
+  | 'manage';
 
 export type PermissionMap = Record<Permission['prefix'], PermissionMethod[]>;

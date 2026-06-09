@@ -10,6 +10,8 @@ const adminPermissions: PermissionMap = {
   customers: ['get', 'delete', 'patch'],
   'customers/create': ['post'],
   audit: ['get'],
+  products: ['post', 'get', 'delete', 'put'],
+  // orders: ['post', 'get'],
 } as const satisfies PermissionMap;
 
 export const AdminRole = {
