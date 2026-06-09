@@ -1,8 +1,8 @@
 model Product {
   id          String    @id @unique @default(uuid())
   sku         String    @unique
-  name        String
-  description String?
+  name        Json      @db.Json
+  description Json?     @db.Json
   price       Float
   stock       Int
   image       String    @default("uploads/default.png")
