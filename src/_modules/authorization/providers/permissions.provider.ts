@@ -3,7 +3,7 @@ export const permissions = [
     name: { en: 'Languages', ar: 'اللغات' },
     prefix: 'languages',
     default: true,
-    methods: ['get', 'delete', 'patch'],
+    methods: ['post', 'get', 'delete', 'patch'],
   },
 
   {
