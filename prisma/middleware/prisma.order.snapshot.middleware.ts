@@ -4,8 +4,8 @@ import { randomUUID } from 'crypto';
 type ProductSnapshot = {
   id: string;
   sku: string;
-  name: string;
-  description: string | null;
+  name: Prisma.JsonValue;
+  description: Prisma.JsonValue | null;
   image: string | null;
   price: number;
 };
@@ -85,8 +85,6 @@ export function orderSnapshotMiddleware(
     if (!params.model) {
       return next(params);
     }
-
-
 
     if (params.model === 'Order' && params.action === 'create') {
       params.args.data = {
