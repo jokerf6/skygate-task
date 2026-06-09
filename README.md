@@ -49,6 +49,13 @@ The design prioritizes:
 - `docs/UPLOADS.md` — upload service behavior, local storage structure, and S3-compatible contract
 - `docs/MIDDLEWARES.md` — XSS sanitization, rate limiting, auth guards, and permission enforcement
 
+## Production API Documentation
+
+- Swagger production: http://skygate.fahd-portfolio.online/api/docs
+- Postman production JSON: http://skygate.fahd-portfolio.online/api/docs-json
+- Customer docs: http://skygate.fahd-portfolio.online/api/docs/customer
+- Admin docs: http://skygate.fahd-portfolio.online/api/docs/admin
+
 ## Setup
 
 1. Copy environment file:
