@@ -4,7 +4,6 @@ import { firstOrMany } from 'src/globals/helpers/first-or-many';
 import { copyAndRenameFolder } from 'src/globals/helpers/folder.helper';
 import { PrismaService } from 'src/globals/services/prisma.service';
 import { MediaService } from '../media/services/media.service';
-import { LanguagesCacheService } from './services/languages-cache.service';
 import {
   CreateLanguagesDTO,
   FilterLanguagesDTO,
@@ -14,6 +13,7 @@ import {
   getLanguagesArgs,
   getLanguagesArgsWithSelect,
 } from './prisma-args/languages.prisma.args';
+import { LanguagesCacheService } from './services/languages-cache.service';
 
 @Injectable()
 export class LanguagesService {
@@ -36,32 +36,24 @@ export class LanguagesService {
   }
 
   async findAll(filters: FilterLanguagesDTO) {
-    return this.cache.remember(
-      'findAll',
-      filters ?? {},
-      async () => {
-        const args = getLanguagesArgs(filters);
-        const argsWithSelect = getLanguagesArgsWithSelect();
+    return this.cache.remember('findAll', filters ?? {}, async () => {
+      const args = getLanguagesArgs(filters);
+      const argsWithSelect = getLanguagesArgsWithSelect();
 
-        return this.prisma.language[firstOrMany(filters?.key)]({
-          ...argsWithSelect,
-          ...args,
-        });
-      },
-    );
+      return this.prisma.language[firstOrMany(filters?.key)]({
+        ...argsWithSelect,
+        ...args,
+      });
+    });
   }
 
   async count(filters: FilterLanguagesDTO) {
-    return this.cache.remember(
-      'count',
-      filters ?? {},
-      async () => {
-        const args = getLanguagesArgs(filters);
-        return this.prisma.language.count({
-          where: args.where,
-        });
-      },
-    );
+    return this.cache.remember('count', filters ?? {}, async () => {
+      const args = getLanguagesArgs(filters);
+      return this.prisma.language.count({
+        where: args.where,
+      });
+    });
   }
   async delete(key: string): Promise<void> {
     if (key === 'en')
@@ -92,8 +84,5 @@ export class LanguagesService {
       `${dir}/uploads/i18n/${file}`,
       `${dir}/i18n/${body.key.toLowerCase()}/response.json`,
     );
-  }
-  async getCashedLanguages() {
-    return this.findAll({});
   }
 }

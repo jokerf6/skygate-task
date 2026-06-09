@@ -78,7 +78,7 @@ export class ProductIndexService implements OnModuleInit {
   }
 
   private async getLocales(): Promise<string[]> {
-    const languages = await this.languages.getCashedLanguages();
+    const languages = await this.languages.findAll({});
     return (languages as { key: string }[]).map((l) => l.key);
   }
 
