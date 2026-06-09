@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { ApiScope } from 'src/decorators/api/api-scope.decorator';
 import { tag } from 'src/globals/helpers/tag.helper';
 import { MediaService } from './services/media.service';
 
@@ -8,6 +9,7 @@ const prefix = 'media';
 const LOCAL_UPLOAD_FOLDER = 'uploads';
 @Controller(prefix)
 @ApiTags(tag(prefix))
+@ApiScope(['admin', 'customer'])
 export class MediaController {
   constructor(private mediaService: MediaService) {}
   @Get('/')

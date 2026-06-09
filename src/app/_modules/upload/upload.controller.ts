@@ -15,6 +15,7 @@ import * as path from 'path';
 
 import { ConfigService } from '@nestjs/config';
 import { Auth } from 'src/_modules/authentication/decorators/auth.decorator';
+import { ApiScope } from 'src/decorators/api/api-scope.decorator';
 import { UploadFile } from 'src/decorators/api/upload-file.decorator';
 import { tag } from 'src/globals/helpers/tag.helper';
 import { ResponseService } from 'src/globals/services/response.service';
@@ -36,6 +37,7 @@ const LOCAL_UPLOAD_ALLOWED_MIME_TYPES = Array.from(
 
 @Controller(PREFIX)
 @ApiTags(tag(PREFIX))
+@ApiScope(['admin', 'customer'])
 @Auth()
 export class UploadController {
   private readonly uploadsPath: string;
@@ -125,9 +127,7 @@ export class UploadController {
   }
 
   private normalizeLocalKey(key: string): string {
-    return key.startsWith('uploads/')
-      ? key.slice('uploads/'.length)
-      : key;
+    return key.startsWith('uploads/') ? key.slice('uploads/'.length) : key;
   }
 
   private resolveStoredKey(key: string, fileExtension: string): string {

@@ -1,8 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as fs from 'fs';
-import * as path from 'path';
 
 export const swaggerConfig = (app: INestApplication) => {
   const configService = app.get(ConfigService);
@@ -181,56 +179,6 @@ export const swaggerConfig = (app: INestApplication) => {
     `,
   };
 
-  const getMarkdown = (filePath: string) => {
-    try {
-      if (fs.existsSync(filePath)) {
-        return fs.readFileSync(filePath, 'utf8');
-      }
-    } catch (e) {
-      console.error(`Error reading markdown file: ${filePath}`, e);
-    }
-    return '';
-  };
-
-  const scanModuleGuides = () => {
-    const modulesPaths = [
-      path.join(process.cwd(), 'src/app/_modules'),
-      path.join(process.cwd(), 'src/_modules'),
-    ];
-
-    const guides: { tag: string; description: string }[] = [];
-
-    modulesPaths.forEach((basePath) => {
-      if (!fs.existsSync(basePath)) return;
-
-      const modules = fs.readdirSync(basePath);
-      modules.forEach((moduleName) => {
-        const modulePath = path.join(basePath, moduleName);
-        if (!fs.statSync(modulePath).isDirectory()) return;
-
-        const files = fs.readdirSync(modulePath);
-        const guideFile = files.find((f) => f.toLowerCase().endsWith('.md'));
-
-        if (guideFile) {
-          const content = getMarkdown(path.join(modulePath, guideFile));
-          if (content) {
-            const tagName =
-              moduleName.charAt(0).toUpperCase() +
-              moduleName.slice(1).toLowerCase();
-
-            const wrappedContent = `<details><summary>🔍 <b>${tagName} Integration Guide (Frontend)</b></summary>\n\n${content}\n\n</details>`;
-
-            guides.push({ tag: tagName, description: wrappedContent });
-          }
-        }
-      });
-    });
-
-    return guides;
-  };
-
-  const moduleGuides = scanModuleGuides();
-
   const createDocument = (name: string, urlPath: string, scopeName: string) => {
     const builder = new DocumentBuilder()
       .setTitle(`${projectName} - ${name} API`)
@@ -253,10 +201,6 @@ export const swaggerConfig = (app: INestApplication) => {
         name: 'isLocalized',
         schema: { type: 'boolean', default: false },
       });
-
-    moduleGuides.forEach((guide) => {
-      builder.addTag(guide.tag, guide.description);
-    });
 
     const config = builder.build();
     const baseDocument = SwaggerModule.createDocument(app, config);
@@ -320,10 +264,6 @@ export const swaggerConfig = (app: INestApplication) => {
       name: 'isLocalized',
       schema: { type: 'boolean', default: false },
     });
-
-  moduleGuides.forEach((guide) => {
-    mainBuilder.addTag(guide.tag, guide.description);
-  });
 
   const mainConfig = mainBuilder.build();
   const mainDoc = SwaggerModule.createDocument(app, mainConfig);

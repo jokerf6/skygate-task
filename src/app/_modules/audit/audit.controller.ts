@@ -1,7 +1,10 @@
 import { Controller, Get, Param, ParseIntPipe, Res } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { AdminEndpoint } from 'src/decorators/api/api-scope.decorator';
+import {
+  AdminEndpoint,
+  ApiScope,
+} from 'src/decorators/api/api-scope.decorator';
 import { Filter } from 'src/decorators/param/filter.decorator';
 import { tag } from 'src/globals/helpers/tag.helper';
 import { AuditService } from 'src/globals/services/audit.service';
@@ -12,6 +15,7 @@ const PREFIX = 'audit';
 
 @ApiTags(tag(PREFIX))
 @Controller(PREFIX)
+@ApiScope(['admin'])
 export class AuditController {
   constructor(
     private readonly auditService: AuditService,

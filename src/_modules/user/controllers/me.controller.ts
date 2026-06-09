@@ -15,6 +15,7 @@ import { UserService } from '../services/user.service';
 const prefix = 'profile';
 @Controller('users/me')
 @ApiTags(tag(prefix))
+@ApiScope(['admin', 'customer'])
 @Auth({})
 export class MeController {
   constructor(

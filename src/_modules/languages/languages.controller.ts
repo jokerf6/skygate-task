@@ -17,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Auth } from 'src/_modules/authentication/decorators/auth.decorator';
+import { ApiScope } from 'src/decorators/api/api-scope.decorator';
 import { UploadMultipleFiles } from 'src/decorators/api/upload-file.decorator';
 import { Filter } from 'src/decorators/param/filter.decorator';
 import { isOne } from 'src/globals/helpers/first-or-many';
@@ -44,6 +45,7 @@ export class LanguagesController {
   ) {}
 
   @Post('/')
+  @ApiScope(['admin'])
   @ApiDefaultOkResponse(null)
   @UploadMultipleFiles([
     {
@@ -64,6 +66,7 @@ export class LanguagesController {
     return this.response.created(res, 'language created successfully');
   }
 
+  @ApiScope(['admin'])
   @Patch('/:key')
   @UploadMultipleFiles([
     {
@@ -94,6 +97,8 @@ export class LanguagesController {
     await this.service.update(body);
     return this.response.created(res, 'language updated successfully');
   }
+
+  @ApiScope(['admin', 'customer'])
   @Get(['/', '/:key'])
   @ApiParam({
     type: 'string',
@@ -129,6 +134,7 @@ export class LanguagesController {
     });
   }
 
+  @ApiScope(['admin'])
   @Delete('/:key')
   @Auth({ prefix })
   @ApiParam({
