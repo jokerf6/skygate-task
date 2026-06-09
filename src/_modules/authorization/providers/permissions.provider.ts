@@ -1,22 +1,11 @@
 export const permissions = [
-  // {
-  //   name: { en: 'Languages', ar: 'اللغات' },
-  //   prefix: 'languages',
-  //   default: true,
-  //   methods: ['get', 'delete', 'patch'],
-  // },
-  //   {
-  //   name: { en: 'Employees', ar: 'الموظفين' },
-  //   prefix: 'employees',
-  //   default: true,
-  //   methods: ['post', 'get', 'delete', 'patch','manage'],
-  // },
-  // {
-  //   name: { en: 'Users', ar: 'المستخدمين' },
-  //   prefix: 'users',
-  //   default: false,
-  //   methods: ['post', 'get', 'delete', 'patch'],
-  // },
+  {
+    name: { en: 'Languages', ar: 'اللغات' },
+    prefix: 'languages',
+    default: true,
+    methods: ['get', 'delete', 'patch'],
+  },
+
   {
     name: { en: 'Roles', ar: 'الادوار' },
     prefix: 'roles',
@@ -29,12 +18,7 @@ export const permissions = [
     default: true,
     methods: ['get'],
   },
-  // {
-  //   name: { en: 'Profile', ar: 'الحساب الشخصي' },
-  //   prefix: 'profile',
-  //   default: true,
-  //   methods: ['post', 'get', 'patch','delete'],
-  // },
+
   {
     name: { en: 'Permissions', ar: 'الصلاحيات' },
     prefix: 'permissions',
@@ -54,43 +38,18 @@ export const permissions = [
     methods: ['post'],
   },
 
-  // {
-  //   name: { en: 'filters', ar: 'الفلاتر' },
-  //   prefix: 'filters',
-  //   default: true,
-  //   methods: ['get'],
-  // },
-  // {
-  //   name: { en: 'settings', ar: 'الإعدادات' },
-  //   prefix: 'settings',
-  //   default: false,
-  //   methods: ['get', 'patch'],
-  // },
-  // {
-  //   name: { en: 'Social Media', ar: 'وسائل التواصل الاجتماعي' },
-  //   prefix: 'social-media',
-  //   default: false,
-  //   methods: ['post', 'get', 'patch', 'delete'],
-  // },
-
-  //   {
-  //   name: { en: 'Cities', ar: 'المدن' },
-  //   prefix: 'cities',
-  //   default: true,
-  //   methods: ['post', 'get', 'patch', 'delete','manage'],
-  // },
   {
     name: { en: 'Products', ar: 'المنتجات' },
     prefix: 'products',
     default: true,
     methods: ['post', 'get', 'delete', 'put'],
   },
-  // {
-  //  name: { en: 'Orders', ar: 'الطلبات' },
-  //   prefix: 'orders',
-  //   default: true,
-  //   methods: ['post', 'get'],
-  // },
+  {
+    name: { en: 'Orders', ar: 'الطلبات' },
+    prefix: 'orders',
+    default: true,
+    methods: ['post', 'get'],
+  },
 ];
 
 type Permission = (typeof permissions)[number];

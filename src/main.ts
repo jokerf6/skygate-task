@@ -60,7 +60,18 @@ async function bootstrap() {
 
   await app.listen(port, async () => {
     logger.log(`Server is running on port ${port}`, 'Bootstrap');
-    logger.log(`Swagger is running on http://localhost:${port}${prefix}/docs`, 'Bootstrap');
+    logger.log(
+      `Swagger is running on http://localhost:${port}${prefix}/docs`,
+      'Bootstrap',
+    );
+    logger.log(
+      `Customer Swagger is running on http://localhost:${port}${prefix}/docs/customer`,
+      'Bootstrap',
+    );
+    logger.log(
+      `Admin Swagger is running on http://localhost:${port}${prefix}/docs/admin`,
+      'Bootstrap',
+    );
   });
 }
 bootstrap();
