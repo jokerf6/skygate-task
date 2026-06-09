@@ -3,13 +3,13 @@ import { paginateOrNot } from 'src/globals/helpers/pagination-params';
 import { FilterOrderDTO } from '../dto/filter-order.dto';
 import { selectOrderOBJ } from './order.prisma-select';
 
-export const getOrderArgs = (query: FilterOrderDTO, userId?: string) => {
-  const { page, limit, status, startDate, endDate, minTotal, id } = query;
+export const getOrderArgs = (query: FilterOrderDTO) => {
+  const { page, limit, status, startDate, endDate, minTotal, id, userId } =
+    query;
 
   const searchArray: Prisma.OrderWhereInput[] = [];
-
   if (userId) {
-    searchArray.push({ userId });
+    searchArray.push({ userId: { in: [...userId] } });
   }
 
   if (status) {

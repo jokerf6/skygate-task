@@ -7,11 +7,10 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { RolesKeys } from 'src/_modules/authorization/providers/roles';
-import { PrismaService } from 'src/globals/services/prisma.service';
 
 @Injectable()
 export class OrderOwnershipInterceptor implements NestInterceptor {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor() {}
 
   async intercept(
     context: ExecutionContext,
@@ -25,7 +24,7 @@ export class OrderOwnershipInterceptor implements NestInterceptor {
     }
 
     const isAdmin = user.Role?.roleKey === RolesKeys.ADMIN;
-    request.filterUserId = isAdmin ? undefined : user.id;
+    request.query.userId = isAdmin ? undefined : user.id;
 
     return next.handle();
   }

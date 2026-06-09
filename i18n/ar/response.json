@@ -100,5 +100,8 @@
   "Product deleted successfully": "Product deleted successfully",
   "Product with this SKU already exists": "Product with this SKU already exists",
   "Product not found": "Product not found",
-  "Number must be greater than 0": "Number must be greater than 0"
+  "Number must be greater than 0": "Number must be greater than 0",
+  "too_many_requests": "too_many_requests",
+  "User is not authenticated": "User is not authenticated",
+  "A request with this idempotency key is already in progress": "A request with this idempotency key is already in progress"
 }

@@ -314,7 +314,6 @@ export class ResponseService {
     if (lang && typeof lang === 'string') {
       const { extractedProperty, extractedKey } =
         this.getMessageArgs(messageKey);
-
       if (extractedKey)
         return this.i18n.translate(`response.${extractedKey}`, {
           lang,
@@ -329,7 +328,7 @@ export class ResponseService {
   }
   private getMessageArgs(messageKey: string) {
     const regexProperty = /\*(.*?)\*/;
-    const regexKey = /0(.*?)0/;
+    const regexKey = /0([A-Za-z_]+)0/;
 
     const matchProperty = messageKey.match(regexProperty);
     const matchKey = messageKey.match(regexKey);

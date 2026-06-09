@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 import { Required } from 'src/decorators/dto/required-input.decorator';
 import { ValidateExist } from 'src/decorators/dto/validators/validate-found-number.decorator';
@@ -21,5 +22,6 @@ export class CreateOrderDTO {
 
   @Required({ type: [OrderItemDTO] })
   @ValidateNested({ each: true })
+  @Type(() => OrderItemDTO)
   items: OrderItemDTO[];
 }
