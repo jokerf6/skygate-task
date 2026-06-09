@@ -5,7 +5,7 @@ import { FilterProductDTO } from '../dto/filter-product.dto';
 import { selectProductOBJ } from './product.prisma-select';
 
 export const getProductArgs = (query: FilterProductDTO) => {
-  const { page, limit, search, sku, minPrice, maxPrice, inStock, id } = query;
+  const { page, limit, sku, minPrice, maxPrice, inStock, id } = query;
 
   const searchArray: Prisma.ProductWhereInput[] = [];
   if (sku) {

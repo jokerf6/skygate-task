@@ -1,11 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Client } from '@opensearch-project/opensearch';
-import { OPENSEARCH_CLIENT } from './opensearch.module';
+import { OPENSEARCH_CLIENT } from './opensearch.constants';
 
 @Injectable()
 export class OpenSearchService {
   private readonly logger = new Logger(OpenSearchService.name);
-
   constructor(@Inject(OPENSEARCH_CLIENT) private readonly client: Client) {}
 
   async indexDocument(
