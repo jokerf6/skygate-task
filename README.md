@@ -140,6 +140,11 @@ For coverage:
 npm run test:cov
 ```
 
+For e2e:
+
+```bash
+npm run test:e2e
+```
 ## Contact
 
 Project owner: `Fahd Hakem`
