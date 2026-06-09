@@ -4,14 +4,12 @@ import { Required } from 'src/decorators/dto/required-input.decorator';
 import { ValidateName } from 'src/decorators/dto/validators/validate-json.decorator';
 import { ValidateNumber } from 'src/decorators/dto/validators/validate-number.decorator';
 import { ValidateString } from 'src/decorators/dto/validators/validate-string.decorator';
-import { ValidateUnique } from 'src/decorators/dto/validators/validate-unique-number.decorator';
 
 export class CreateProductDTO {
   @Required({ example: 'PROD-12345' })
   @MinLength(3)
   @MaxLength(50)
   @ValidateString()
-  @ValidateUnique({ model: 'product' })
   sku: string;
 
   @Required()
