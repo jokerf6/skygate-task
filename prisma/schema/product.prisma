@@ -1,7 +1,7 @@
 model Product {
   id          String    @id @unique @default(uuid())
   sku         String    @unique
-  name        Json      @db.Json
+  name        String
   description Json?     @db.Json
   price       Float
   stock       Int

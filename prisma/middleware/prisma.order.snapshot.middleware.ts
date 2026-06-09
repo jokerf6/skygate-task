@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 type ProductSnapshot = {
   id: string;
   sku: string;
-  name: Prisma.JsonValue;
+  name: string;
   description: Prisma.JsonValue | null;
   image: string | null;
   price: number;

@@ -4,6 +4,7 @@ import { ClsService } from 'nestjs-cls';
 import { AuditMiddleware } from 'prisma/middleware/prisma.audit.middleware';
 import { ExistMiddleware } from 'prisma/middleware/prisma.exist.middleware';
 import { orderSnapshotMiddleware } from 'prisma/middleware/prisma.order.snapshot.middleware';
+import { skuMiddleware } from 'prisma/middleware/prisma.sku.middleware';
 import { softDeleteMiddleware } from 'prisma/middleware/prisma.softdelete.middleware';
 import { sortMiddleware } from 'prisma/middleware/prisma.sort.middleware';
 
@@ -17,6 +18,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     try {
       await this.$connect();
 
+      this.$use(skuMiddleware(this));
       this.$use(orderSnapshotMiddleware(this));
       // Audit Middleware
       this.$use(AuditMiddleware(this, this.cls));

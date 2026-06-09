@@ -4,13 +4,22 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   Res,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
-import { Auth, OptionalAuth } from 'src/_modules/authentication/decorators/auth.decorator';
+import {
+  Auth,
+  OptionalAuth,
+} from 'src/_modules/authentication/decorators/auth.decorator';
+import { ApiScope } from 'src/decorators/api/api-scope.decorator';
 import {
   ApiOptionalIdParam,
   ApiRequiredIdParam,
@@ -38,27 +47,34 @@ export class ProductController {
   ) {}
 
   @Post('/')
+  @ApiScope(['admin'])
   @Auth({ prefix })
   @ApiCreatedResponse(
     buildExamples([
       { title: 'Create Product', paginated: false, body: selectProductOBJ() },
     ]),
   )
-  async create(
-    @Res() res: Response,
-    @Body() dto: CreateProductDTO,
-  ) {
+  async create(@Res() res: Response, @Body() dto: CreateProductDTO) {
     const product = await this.productService.create(dto);
     return this.responses.created(res, 'Product created successfully', product);
   }
 
   @Get(['/', '/:id'])
   @OptionalAuth()
+  @ApiScope(['customer', 'admin'])
   @ApiQuery({ type: FilterProductDTO })
   @ApiOkResponse(
     buildExamples([
-      { title: 'Get All Products', paginated: true, body: [selectProductOBJ()] },
-      { title: 'Get Product with id', paginated: false, body: selectProductOBJ() },
+      {
+        title: 'Get All Products',
+        paginated: true,
+        body: [selectProductOBJ()],
+      },
+      {
+        title: 'Get Product with id',
+        paginated: false,
+        body: selectProductOBJ(),
+      },
     ]),
   )
   @ApiOptionalIdParam()
@@ -71,13 +87,19 @@ export class ProductController {
       ? undefined
       : await this.productService.count(filters);
 
-    return this.responses.success(res, 'Products returned successfully', products, {
-      total,
-    });
+    return this.responses.success(
+      res,
+      'Products returned successfully',
+      products,
+      {
+        total,
+      },
+    );
   }
 
-  @Put('/:id')
+  @Patch('/:id')
   @Auth({ prefix })
+  @ApiScope(['admin'])
   @ApiRequiredIdParam()
   @ApiOkResponse(
     buildExamples([
@@ -95,11 +117,9 @@ export class ProductController {
 
   @Delete('/:id')
   @Auth({ prefix })
+  @ApiScope(['admin'])
   @ApiRequiredIdParam()
-  async delete(
-    @Res() res: Response,
-    @Param() { id }: RequiredIdParam,
-  ) {
+  async delete(@Res() res: Response, @Param() { id }: RequiredIdParam) {
     await this.productService.delete(id);
     return this.responses.success(res, 'Product deleted successfully');
   }

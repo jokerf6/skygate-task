@@ -8,7 +8,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { Queue } from 'bull';
 import { RedisService } from 'src/app/_modules/redis/redis.service';
 import { JobName, QueueName } from 'src/app/_modules/worker/worker.constants';
-import { firstOrMany } from 'src/globals/helpers/first-or-many';
+import { firstOrMany, isOne } from 'src/globals/helpers/first-or-many';
 import { PrismaService } from 'src/globals/services/prisma.service';
 import { CreateProductDTO } from '../dto/create-product.dto';
 import { FilterProductDTO } from '../dto/filter-product.dto';
@@ -51,17 +51,16 @@ export class ProductService {
   async getAll(filters: FilterProductDTO) {
     if (filters.search) return this.openSearch(filters.search);
 
-    const singleId = this.extractSingleId(filters.id);
-    if (singleId) {
-      const cached = await this.getCachedProduct(singleId);
+    if (isOne(filters.id)) {
+      const cached = await this.getCachedProduct(filters.id);
       if (cached) return cached;
     }
 
     const args = getProductArgs(filters);
     const result = await this.prisma.product[firstOrMany(filters.id)](args);
 
-    if (singleId && result) {
-      this.trackProductView(singleId, result);
+    if (isOne(filters.id) && result) {
+      this.trackProductView(filters.id, result);
     }
 
     return result;
@@ -170,14 +169,6 @@ export class ProductService {
         await redis.del(...keys);
       }
     } while (cursor !== '0');
-  }
-
-  private extractSingleId(id: any): string | null {
-    if (!id) return null;
-    if (Array.isArray(id)) {
-      return id.length === 1 ? id[0] : null;
-    }
-    return typeof id === 'string' ? id : null;
   }
 
   private async openSearch(search: string) {

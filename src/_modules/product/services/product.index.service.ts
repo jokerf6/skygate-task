@@ -48,7 +48,7 @@ export class ProductIndexService implements OnModuleInit {
     };
 
     for (const locale of locales) {
-      doc[`name_${locale}`] = this.pick(product.name, locale);
+      doc[`name_${locale}`] = product.name;
       doc[`description_${locale}`] = this.pick(product.description, locale);
     }
 

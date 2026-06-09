@@ -3,13 +3,19 @@ import { Transform } from 'class-transformer';
 import { IsNumber } from 'class-validator';
 
 export function ValidateNumber(
-  options: { allowNegative?: boolean } = { allowNegative: false },
+  options: { allowNegative?: boolean; allowZero?: boolean } = {
+    allowNegative: false,
+    allowZero: true,
+  },
 ) {
   return applyDecorators(
     Transform(({ value }) => {
       const num = +value;
       if (options.allowNegative === false && num < 0) {
         throw new BadRequestException('Negative numbers are not allowed');
+      }
+      if (options.allowZero === false && num === 0) {
+        throw new BadRequestException('Number must be greater than 0');
       }
       return num;
     }),
