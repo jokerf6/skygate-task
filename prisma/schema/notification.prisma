@@ -8,7 +8,7 @@ model SystemNotification {
   smsAllowed          Boolean   @default(true) @map("sms_allowed")
   notificationAllowed Boolean   @default(true) @map("push_notification_allowed")
   emailTemplate       Json?     @map("email_template") @db.Json
-  event               EVENTS
+  event               EVENTS    @unique
   receiverId          String    @map("receiver_id")
   // Default Fields
   createdAt           DateTime  @default(now()) @map("created_at")

@@ -19,7 +19,6 @@ model User {
   // relations
   OTPs        OTP[]
   Sessions    Session[]
-  Transaction Transaction[]
   Orders      Order[]
 
   @@index([email])

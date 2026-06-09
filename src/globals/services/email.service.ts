@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class EmailService {
-  constructor() {}
+  private readonly logger = new Logger(EmailService.name);
   async sendEmail(email: string, message: string) {
-    // eslint-disable-next-line no-console
-    console.log(`Sending Email to ${email} with message: ${message}`);
+    this.logger.log(`Sending Email to ${email} with message: ${message}`);
   }
 }
