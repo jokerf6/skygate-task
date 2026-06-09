@@ -6,7 +6,7 @@ import { ValidateNumber } from 'src/decorators/dto/validators/validate-number.de
 import { ValidateString } from 'src/decorators/dto/validators/validate-string.decorator';
 
 export class CreateProductDTO {
-  @Required({ example: 'PROD-12345' })
+  @Optional({ example: 'PROD-12345' })
   @MinLength(3)
   @MaxLength(50)
   @ValidateString()
@@ -15,19 +15,19 @@ export class CreateProductDTO {
   @Required()
   @MinLength(3)
   @MaxLength(200)
-  @ValidateName()
-  name: Json;
+  @ValidateString()
+  name: string;
 
   @Optional()
   @ValidateName()
   description?: Json;
 
   @Required()
-  @ValidateNumber({ allowNegative: false })
+  @ValidateNumber({ allowNegative: false, allowZero: false })
   price: number;
 
   @Required({ example: 50 })
-  @ValidateNumber({ allowNegative: false })
+  @ValidateNumber({ allowNegative: false, allowZero: false })
   stock: number;
 
   @Optional({ example: 'uploads/default.png' })

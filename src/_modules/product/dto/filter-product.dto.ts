@@ -24,4 +24,8 @@ export class FilterProductDTO extends FiltrationParamsDTO {
   @Optional()
   @ValidateBoolean()
   inStock?: boolean;
+
+  @Optional()
+  @ValidateString()
+  search?: string;
 }
