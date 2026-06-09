@@ -12,11 +12,23 @@ if [ -n "$DATABASE_URL" ]; then
   done
   echo "Database is ready."
 
-  echo "Syncing database schema..."
-  npm run db:sync
+  echo "Syncing database schema with force reset..."
+  npx prisma db push --force-reset --accept-data-loss
 
   echo "Seeding database..."
   npm run db:seed
+fi
+
+if [ -n "$OPENSEARCH_URL" ]; then
+  echo "Parsing OpenSearch connection details..."
+  OPENSEARCH_HOST=$(node -e "try { const u = new URL(process.env.OPENSEARCH_URL); console.log(u.hostname); } catch(e) { console.log('opensearch'); }")
+  OPENSEARCH_PORT=$(node -e "try { const u = new URL(process.env.OPENSEARCH_URL); console.log(u.port || 9200); } catch(e) { console.log(9200); }")
+
+  echo "Waiting for OpenSearch at $OPENSEARCH_HOST:$OPENSEARCH_PORT..."
+  until nc -z "$OPENSEARCH_HOST" "$OPENSEARCH_PORT"; do
+    sleep 1
+  done
+  echo "OpenSearch is ready."
 fi
 
 exec "$@"
