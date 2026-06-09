@@ -99,5 +99,6 @@
   "Product updated successfully": "Product updated successfully",
   "Product deleted successfully": "Product deleted successfully",
   "Product with this SKU already exists": "Product with this SKU already exists",
-  "Product not found": "Product not found"
+  "Product not found": "Product not found",
+  "Number must be greater than 0": "Number must be greater than 0"
 }

@@ -21,6 +21,7 @@ import { WinstonModule } from 'nest-winston';
 import { ClsModule } from 'nestjs-cls';
 import { AuthenticationModule } from 'src/_modules/authentication/authentication.module';
 import { ProductModule } from 'src/_modules/product/product.module';
+import { OrderModule } from 'src/_modules/order/order.module';
 import { UserModule } from 'src/_modules/user/user.module';
 import { buildWinstonOptions } from 'src/configs/winston.config';
 import { NotificationMiddleware } from 'src/globals/middlewares/notification.middleware';
@@ -84,6 +85,7 @@ const I18N_DIR = path.join(process.cwd(), './i18n');
     WorkerModule,
     AuditModule,
     ProductModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationService],
