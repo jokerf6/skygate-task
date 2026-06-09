@@ -51,10 +51,10 @@ The design prioritizes:
 
 ## Production API Documentation
 
-- Swagger production: http://skygate.fahd-portfolio.online/api/docs
-- Postman production JSON: http://skygate.fahd-portfolio.online/api/docs-json
-- Customer docs: http://skygate.fahd-portfolio.online/api/docs/customer
-- Admin docs: http://skygate.fahd-portfolio.online/api/docs/admin
+- Swagger production: https://skygate.fahd-portfolio.online/api/docs
+- Postman production JSON: https://skygate.fahd-portfolio.online/api/docs-json
+- Customer docs: https://skygate.fahd-portfolio.online/api/docs/customer
+- Admin docs: https://skygate.fahd-portfolio.online/api/docs/admin
 
 ## Setup
 
