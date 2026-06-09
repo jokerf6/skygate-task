@@ -2,10 +2,10 @@
 git pull
 npm run build
 node translate.ts
-CHANGES=$(git diff --name-only)
-if [ -n "$CHANGES" ]; then
-  echo "$CHANGES"
-  git add .
-fi
+#CHANGES=$(git diff --name-only)
+#if [ -n "$CHANGES" ]; then
+#  echo "$CHANGES"
+#  git add .
+#fi
 
 
