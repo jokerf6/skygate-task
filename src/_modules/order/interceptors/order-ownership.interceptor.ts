@@ -24,7 +24,7 @@ export class OrderOwnershipInterceptor implements NestInterceptor {
     }
 
     const isAdmin = user.Role?.roleKey === RolesKeys.ADMIN;
-    request.query.userId = isAdmin ? undefined : user.id;
+    if (!isAdmin) request.query.userId = user.id;
 
     return next.handle();
   }
