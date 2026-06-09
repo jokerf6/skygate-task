@@ -3,6 +3,7 @@ export enum QueueName {
     EMAIL = 'email',
     SMS = 'sms',
     PUSH = 'push',
+    PRODUCT_INDEX = 'product-index',
 }
 
 export enum JobName {
@@ -10,4 +11,6 @@ export enum JobName {
     SEND_EMAIL = 'send_email',
     SEND_SMS = 'send_sms',
     SEND_PUSH = 'send_push',
+    INDEX_PRODUCT = 'index_product',
+    REMOVE_PRODUCT = 'remove_product',
 }

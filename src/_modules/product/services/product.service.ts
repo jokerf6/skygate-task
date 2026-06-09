@@ -3,9 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { firstOrMany } from 'src/globals/helpers/first-or-many';
 import { PrismaService } from 'src/globals/services/prisma.service';
+import { JobName, QueueName } from 'src/app/_modules/worker/worker.constants';
 import { CreateProductDTO } from '../dto/create-product.dto';
 import { FilterProductDTO } from '../dto/filter-product.dto';
 import { UpdateProductDTO } from '../dto/update-product.dto';
@@ -18,6 +21,7 @@ export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productIndex: ProductIndexService,
+    @InjectQueue(QueueName.PRODUCT_INDEX) private readonly indexQueue: Queue,
   ) {}
 
   async create(dto: CreateProductDTO) {
@@ -27,7 +31,7 @@ export class ProductService {
         select: selectProductOBJ(),
       });
 
-      this.productIndex.indexProduct(product).catch(() => void 0);
+      await this.indexQueue.add(JobName.INDEX_PRODUCT, product);
 
       return product;
     } catch (error) {
@@ -80,7 +84,7 @@ export class ProductService {
       });
     });
 
-    this.productIndex.indexProduct(product).catch(() => void 0);
+    await this.indexQueue.add(JobName.INDEX_PRODUCT, product);
 
     return product;
   }
@@ -88,7 +92,7 @@ export class ProductService {
   async delete(id: Id): Promise<void> {
     await this.prisma.product.delete({ where: { id } });
 
-    this.productIndex.removeProduct(id).catch(() => void 0);
+    await this.indexQueue.add(JobName.REMOVE_PRODUCT, { id });
   }
 
   private async openSearch(search: string) {

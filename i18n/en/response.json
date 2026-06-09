@@ -91,5 +91,13 @@
   "Failed to send push notification": "Failed to send push notification",
   "File uploaded successfully": "File uploaded successfully",
   "No file uploaded": "No file uploaded",
-  "File already exists": "File already exists"
+  "File already exists": "File already exists",
+  "Order created successfully": "Order created successfully",
+  "Orders returned successfully": "Orders returned successfully",
+  "Product created successfully": "Product created successfully",
+  "Products returned successfully": "Products returned successfully",
+  "Product updated successfully": "Product updated successfully",
+  "Product deleted successfully": "Product deleted successfully",
+  "Product with this SKU already exists": "Product with this SKU already exists",
+  "Product not found": "Product not found"
 }
