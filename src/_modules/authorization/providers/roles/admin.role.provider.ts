@@ -3,15 +3,12 @@ import { mapPermissionConfigToRole } from '../../../../../src/globals/helpers/ma
 import { PermissionMap } from '../permissions.provider';
 
 const adminPermissions: PermissionMap = {
-  // languages: ['post', 'get', 'delete', 'patch'],
-  // users: ['get', 'delete', 'patch'],
+  languages: ['post', 'get', 'delete', 'patch'],
   roles: ['post', 'get', 'delete', 'patch'],
   permissions: ['get', 'patch'],
-  customers: ['get', 'delete', 'patch'],
-  'customers/create': ['post'],
   audit: ['get'],
   products: ['post', 'get', 'delete', 'put'],
-  // orders: ['post', 'get'],
+  orders: ['post', 'get'],
 } as const satisfies PermissionMap;
 
 export const AdminRole = {

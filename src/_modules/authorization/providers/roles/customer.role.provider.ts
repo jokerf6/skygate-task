@@ -3,7 +3,8 @@ import { mapPermissionConfigToRole } from '../../../../../src/globals/helpers/ma
 import { PermissionMap } from '../permissions.provider';
 
 const customerPermissions: PermissionMap = {
-  // orders: ['post', 'get'],
+  orders: ['post', 'get'],
+  languages: ['get'],
   products: ['get'],
 } as const satisfies PermissionMap;
 
