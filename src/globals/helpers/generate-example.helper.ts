@@ -34,8 +34,16 @@ const getExampleValue = (key?: string, obj?: any): any => {
   if (!key) return 'string';
   const lowerKey = key.toLowerCase();
 
+  if (lowerKey === 'productsnapshot') {
+    return {
+      id: '7731311e-0dac-4557-bf42-dc3c9adeea4e',
+      sku: 'PROD-10345',
+      name: { en: 'John', ar: 'جون' },
+      price: 0.1,
+    };
+  }
+
   if (
-    lowerKey.includes('id') ||
     lowerKey.includes('number') ||
     lowerKey.includes('amount') ||
     lowerKey.includes('count') ||
@@ -43,8 +51,7 @@ const getExampleValue = (key?: string, obj?: any): any => {
     lowerKey.includes('price') ||
     lowerKey.includes('wallet') ||
     lowerKey.includes('points') ||
-    lowerKey.includes('orders') 
-
+    lowerKey.includes('orders')
   )
     return 1;
 
